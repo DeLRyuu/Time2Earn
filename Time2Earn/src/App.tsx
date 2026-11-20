@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PlayerLayout } from './components/layout/PlayerLayout';
 import { AdminLayout } from './components/layout/AdminLayout';
+import { ProtectedRoute } from './components/common/ProtectedRoute';
 
 // Player Pages
 import { Home } from './pages/player/Home';
@@ -29,11 +30,18 @@ function App() {
         {/* Landing redirects to Player Home */}
         <Route path="/" element={<Navigate to="/player" replace />} />
 
-        {/* Auth Route */}
+        {/* Public Auth Route */}
         <Route path="/login" element={<Login />} />
 
-        {/* Player Section with BottomNav & Desktop Sidebar */}
-        <Route path="/player" element={<PlayerLayout />}>
+        {/* Player Section with Route Guard */}
+        <Route
+          path="/player"
+          element={
+            <ProtectedRoute requiredRole="user">
+              <PlayerLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Home />} />
           <Route path="rewards" element={<Rewards />} />
           <Route path="arcade" element={<Arcade />} />
@@ -41,8 +49,15 @@ function App() {
           <Route path="profile" element={<Profile />} />
         </Route>
 
-        {/* Admin Section */}
-        <Route path="/admin" element={<AdminLayout />}>
+        {/* Admin Section with Strict Admin Guard */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<AdminDashboard />} />
           <Route path="sessions" element={<AdminSessions />} />
           <Route path="redemptions" element={<AdminRedemptions />} />

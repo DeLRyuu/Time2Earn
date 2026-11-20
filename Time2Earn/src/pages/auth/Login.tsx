@@ -1,23 +1,50 @@
 import React, { useState } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export const Login: React.FC = () => {
+  const { login } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username) {
-      showToast('Please enter your username', 'warning');
+    setErrorMessage(null);
+
+    if (!username.trim() || !password) {
+      setErrorMessage('Please enter both username and password.');
       return;
     }
-    showToast(`Welcome, ${username}! (Auth connecting in Phase 3)`, 'success');
-    navigate('/player');
+
+    setIsLoading(true);
+    const res = await login(username, password);
+    setIsLoading(false);
+
+    if (res.success) {
+      showToast(`Welcome back, ${username}!`, 'success');
+      // If admin username is "admin" or user has admin role
+      if (username.toLowerCase() === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/player');
+      }
+    } else {
+      setErrorMessage(res.error || 'Login failed. Please check your credentials.');
+      showToast(res.error || 'Authentication error', 'error');
+    }
+  };
+
+  const handleQuickDemo = (demoUser: string, demoPass: string) => {
+    setUsername(demoUser);
+    setPassword(demoPass);
   };
 
   return (
@@ -35,6 +62,22 @@ export const Login: React.FC = () => {
 
         <Card variant="neon">
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {errorMessage && (
+              <div
+                style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid var(--danger)',
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--danger)',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                }}
+              >
+                {errorMessage}
+              </div>
+            )}
+
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
                 USERNAME
@@ -44,6 +87,7 @@ export const Login: React.FC = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="e.g. lois_123xx"
+                required
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem',
@@ -66,6 +110,7 @@ export const Login: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                required
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem',
@@ -79,22 +124,41 @@ export const Login: React.FC = () => {
               />
             </div>
 
-            <Button type="submit" variant="primary" size="lg" style={{ marginTop: '0.5rem', width: '100%' }}>
+            <Button type="submit" variant="primary" size="lg" isLoading={isLoading} style={{ marginTop: '0.5rem', width: '100%' }}>
               ENTER CONSOLE
             </Button>
 
-            <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Forgot credentials? Staff-assisted resets available at the counter.
+            <div style={{ textAlign: 'center', marginTop: '0.25rem' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Forgot password? Request staff assistance at the shop desk.
               </span>
             </div>
           </form>
         </Card>
 
-        <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
-          <Link to="/player" style={{ color: 'var(--primary)', fontSize: '0.85rem', textDecoration: 'underline' }}>
-            Skip directly to Player Dashboard $\rightarrow$
-          </Link>
+        {/* Quick Demo Test Credential Buttons */}
+        <div style={{ marginTop: '1.25rem', padding: '0.75rem 1rem', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)' }}>
+          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+            Test Accounts (Phase 3 Validation)
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              style={{ flex: 1 }}
+              onClick={() => handleQuickDemo('lois_123xx', 'password123')}
+            >
+              Player (lois)
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              style={{ flex: 1 }}
+              onClick={() => handleQuickDemo('admin', 'adminpassword123')}
+            >
+              Staff Admin
+            </Button>
+          </div>
         </div>
       </div>
     </div>

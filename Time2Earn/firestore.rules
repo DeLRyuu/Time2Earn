@@ -1,0 +1,108 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+
+    // 1. Config: Public read for client rate display, admin-only write
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 2. Users: Read own document only; clients cannot modify balance, rank, or role
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (
+        isOwner(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'credits',
+          'exp',
+          'rank',
+          'role',
+          'isBanned',
+          'isRestricted',
+          'totalSessions',
+          'totalCreditsEarned'
+        ])
+      );
+      allow delete: if false; // Strict: Never delete user accounts
+    }
+
+    // 3. Rewards: Players read active rewards only; admin reads all and writes
+    match /rewards/{rewardId} {
+      allow read: if resource.data.isActive == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // 4. Session Requests: Players read own, create pending only; admin updates/resolves
+    match /session_requests/{requestId} {
+      allow read: if (resource != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    // 5. Redemption Requests: Players read own, create pending only; admin updates/resolves
+    match /redemption_requests/{requestId} {
+      allow read: if (resource != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    // 6. Reward Cooldowns: Players read own cooldown locks; admin writes
+    match /reward_cooldowns/{cooldownId} {
+      allow read: if (resource != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // 7. Debts: Players read own debt record; admin manages
+    match /debts/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // 8. Debt Payment Requests: Players read own, create pending only; admin updates/resolves
+    match /debt_payment_requests/{requestId} {
+      allow read: if (resource != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    // 9. Debt History: Players read own history; admin writes
+    match /debt_history/{historyId} {
+      allow read: if (resource != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // 10. Credit Transactions: Players read own transactions; admin writes
+    match /credit_transactions/{txId} {
+      allow read: if (resource != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // 11. Logs: Admin only (audit logs contain administrative operational data)
+    match /logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
