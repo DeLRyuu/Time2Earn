@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Badge } from '../../components/ui/Badge';
 import { useConfig } from '../../hooks/useConfig';
-import { useToast } from '../../components/ui/Toast';
+import { useToast } from '../../hooks/useToast';
 
 export const Home: React.FC = () => {
   const { config, loading } = useConfig();

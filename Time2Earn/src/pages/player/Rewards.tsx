@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { useToast } from '../../components/ui/Toast';
+import { useToast } from '../../hooks/useToast';
 
 export const Rewards: React.FC = () => {
   const { showToast } = useToast();
