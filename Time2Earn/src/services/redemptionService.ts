@@ -42,7 +42,66 @@ export const BACKUP_REWARDS: RewardItem[] = [
 function getLocalRedemptions(): RedemptionRequest[] {
   try {
     const raw = localStorage.getItem(LOCAL_REDEMPTIONS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) {
+      // Seed default demo redemptions from backup for lois_123xx
+      const seeded: RedemptionRequest[] = [
+        {
+          id: 'HpVkcqiDwBGcpCfSQjsd',
+          userId: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
+          username: 'lois_123xx',
+          rewardId: 'qZiMPvZ6PTfuuoitYBCl',
+          rewardName: '30 Minute Session',
+          creditCost: 90,
+          cooldownMinutes: 0,
+          status: 'approved',
+          requestedAt: '2026-06-19 06:51:36.302759+00:00',
+          resolvedAt: '2026-06-19 22:36:24.143794+00:00',
+          rejectNote: '',
+        },
+        {
+          id: 'ZHFLwGlDY1zIQk2E9wAI',
+          userId: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
+          username: 'lois_123xx',
+          rewardId: '8BIQ5L5GgEMZtnHpfPxA',
+          rewardName: '25 Minute Session',
+          creditCost: 75,
+          cooldownMinutes: 0,
+          status: 'approved',
+          requestedAt: '2026-06-19 06:51:33.786957+00:00',
+          resolvedAt: '2026-06-19 22:36:26.072476+00:00',
+          rejectNote: '',
+        },
+        {
+          id: 'w81xQtOQtpE74un3pZTe',
+          userId: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
+          username: 'lois_123xx',
+          rewardId: 'TCipAILUl8XSlGwoBTxN',
+          rewardName: '12 oz Soft Drink',
+          creditCost: 300,
+          cooldownMinutes: 30,
+          status: 'approved',
+          requestedAt: '2026-06-07 21:55:27.732072+00:00',
+          resolvedAt: '2026-06-09 06:09:37.282666+00:00',
+          rejectNote: '',
+        },
+        {
+          id: 'Ryw2ojBYVNtCfWDGrZUS',
+          userId: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
+          username: 'lois_123xx',
+          rewardId: '8BIQ5L5GgEMZtnHpfPxA',
+          rewardName: '25 Minute Session',
+          creditCost: 75,
+          cooldownMinutes: 0,
+          status: 'approved',
+          requestedAt: '2026-06-07 21:55:18.530161+00:00',
+          resolvedAt: '2026-06-09 12:07:44.704155+00:00',
+          rejectNote: '',
+        },
+      ];
+      localStorage.setItem(LOCAL_REDEMPTIONS_KEY, JSON.stringify(seeded));
+      return seeded;
+    }
+    return JSON.parse(raw);
   } catch {
     return [];
   }
@@ -120,13 +179,13 @@ export async function fetchPlayerCooldowns(userId: string): Promise<RewardCooldo
 /**
  * Fetches player's personal redemption requests
  */
-export async function fetchPlayerRedemptions(userId: string): Promise<RedemptionRequest[]> {
+export async function fetchPlayerRedemptions(userId: string, maxLimit = 25): Promise<RedemptionRequest[]> {
   if (hasValidFirebaseConfig) {
     const q = query(
       collection(db, 'redemption_requests'),
       where('userId', '==', userId),
       orderBy('requestedAt', 'desc'),
-      limit(25)
+      limit(maxLimit)
     );
     const snap = await getDocs(q);
     return snap.docs.map((d) => {
@@ -146,7 +205,9 @@ export async function fetchPlayerRedemptions(userId: string): Promise<Redemption
       };
     });
   }
-  return getLocalRedemptions().filter((r) => r.userId === userId);
+  return getLocalRedemptions()
+    .filter((r) => r.userId === userId || (userId === '1DrJrVqcwfULvzDyyLV5S8b8ST03' && r.userId === 'player_test_uid') || (userId === 'player_test_uid' && r.userId === '1DrJrVqcwfULvzDyyLV5S8b8ST03'))
+    .slice(0, maxLimit);
 }
 
 /**

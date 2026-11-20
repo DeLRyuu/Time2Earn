@@ -24,30 +24,66 @@ function getLocalSessions(): SessionRequest[] {
   try {
     const raw = localStorage.getItem(LOCAL_SESSIONS_KEY);
     if (!raw) {
-      // Seed default demo sessions from backup
+      // Seed default demo sessions from backup for lois_123xx
       const seeded: SessionRequest[] = [
         {
-          id: 'demo-sess-1',
-          userId: 'player_test_uid',
+          id: '8EP8Zxi6h3XMyg3gxb6j',
+          userId: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
           username: 'lois_123xx',
-          unitId: 'PC-01',
-          amountPaid: 20.0,
-          creditsEarned: 27.6,
-          status: 'pending',
-          requestedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          resolvedAt: null,
-          rejectNote: '',
-        },
-        {
-          id: 'demo-sess-2',
-          userId: 'player_test_uid',
-          username: 'lois_123xx',
-          unitId: 'PC-02',
+          unitId: 'PC-O1',
           amountPaid: 50.0,
           creditsEarned: 69.0,
           status: 'approved',
-          requestedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-          resolvedAt: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString(),
+          requestedAt: '2026-08-25 20:43:26.193016+00:00',
+          resolvedAt: '2026-08-26 05:53:27.486238+00:00',
+          rejectNote: '',
+        },
+        {
+          id: 'P0LPkn3BlKIyhKg7dCxr',
+          userId: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
+          username: 'lois_123xx',
+          unitId: 'PC-O1',
+          amountPaid: 50.0,
+          creditsEarned: 74.5,
+          status: 'approved',
+          requestedAt: '2026-07-24 12:10:03.929744+00:00',
+          resolvedAt: '2026-07-26 02:12:03.305238+00:00',
+          rejectNote: '',
+        },
+        {
+          id: 'jCeTcx7iGukFbJ0fhUA0',
+          userId: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
+          username: 'lois_123xx',
+          unitId: 'PC-O2',
+          amountPaid: 50.0,
+          creditsEarned: 74.5,
+          status: 'approved',
+          requestedAt: '2026-06-28 21:58:53.604207+00:00',
+          resolvedAt: '2026-07-23 02:46:10.016954+00:00',
+          rejectNote: '',
+        },
+        {
+          id: 'ArBlX5iAdNYtsOeULRfj',
+          userId: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
+          username: 'lois_123xx',
+          unitId: 'PC-O1',
+          amountPaid: 50.0,
+          creditsEarned: 74.5,
+          status: 'approved',
+          requestedAt: '2026-06-19 06:51:21.579299+00:00',
+          resolvedAt: '2026-06-19 22:36:09.943650+00:00',
+          rejectNote: '',
+        },
+        {
+          id: 'LrNYKlsRnxJDVo87Z0sk',
+          userId: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
+          username: 'lois_123xx',
+          unitId: 'PC-O1',
+          amountPaid: 75.0,
+          creditsEarned: 111.75,
+          status: 'approved',
+          requestedAt: '2026-06-03 07:20:07.883618+00:00',
+          resolvedAt: '2026-06-03 21:54:38.023142+00:00',
           rejectNote: '',
         },
       ];
@@ -140,13 +176,13 @@ export async function submitSessionRequest(params: SessionSubmissionParams): Pro
 /**
  * Fetches player's own session request history
  */
-export async function fetchPlayerSessions(userId: string): Promise<SessionRequest[]> {
+export async function fetchPlayerSessions(userId: string, maxLimit = 25): Promise<SessionRequest[]> {
   if (hasValidFirebaseConfig) {
     const q = query(
       collection(db, 'session_requests'),
       where('userId', '==', userId),
       orderBy('requestedAt', 'desc'),
-      limit(20)
+      limit(maxLimit)
     );
     const snap = await getDocs(q);
     return snap.docs.map((d) => {
@@ -165,7 +201,9 @@ export async function fetchPlayerSessions(userId: string): Promise<SessionReques
       };
     });
   } else {
-    return getLocalSessions().filter((s) => s.userId === userId);
+    return getLocalSessions()
+      .filter((s) => s.userId === userId || (userId === '1DrJrVqcwfULvzDyyLV5S8b8ST03' && s.userId === 'player_test_uid') || (userId === 'player_test_uid' && s.userId === '1DrJrVqcwfULvzDyyLV5S8b8ST03'))
+      .slice(0, maxLimit);
   }
 }
 

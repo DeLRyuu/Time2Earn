@@ -69,3 +69,51 @@ export function calculateRankProgress(
     isMaxRank: false,
   };
 }
+
+export interface RankLadderTier {
+  name: string;
+  threshold: number;
+  status: 'reached' | 'current' | 'locked';
+  expNeeded: number;
+}
+
+/**
+ * Generates the full rank progression ladder
+ * indicating which tiers are reached, currently active, or locked
+ */
+export function getRankLadder(
+  currentExp: number,
+  rankThresholds: Record<string, number>
+): RankLadderTier[] {
+  const sorted = Object.entries(rankThresholds).sort(([, a], [, b]) => a - b);
+  if (sorted.length === 0) return [];
+
+  // Determine current tier index by highest threshold <= currentExp
+  let currentTierIndex = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    if (currentExp >= sorted[i][1]) {
+      currentTierIndex = i;
+    } else {
+      break;
+    }
+  }
+
+  return sorted.map(([name, threshold], idx) => {
+    let status: 'reached' | 'current' | 'locked';
+    if (idx === currentTierIndex) {
+      status = 'current';
+    } else if (idx < currentTierIndex) {
+      status = 'reached';
+    } else {
+      status = 'locked';
+    }
+
+    const expNeeded = Math.max(0, threshold - currentExp);
+    return {
+      name,
+      threshold,
+      status,
+      expNeeded,
+    };
+  });
+}

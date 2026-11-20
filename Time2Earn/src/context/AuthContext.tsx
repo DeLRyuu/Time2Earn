@@ -7,10 +7,11 @@ import { AuthContext } from './authContextDef';
 const SESSION_STORAGE_KEY = 't2e_auth_session';
 
 // Built-in test accounts for offline/demo & emulator testing
-const MOCK_TEST_USERS: Record<string, { password: string; role: 'user' | 'admin'; credits: number; exp: number; rank: string }> = {
-  'lois_123xx': { password: 'password123', role: 'user', credits: 332, exp: 1251, rank: 'Gamer' },
-  'sherwin': { password: 'password123', role: 'user', credits: 140, exp: 641, rank: 'Grinder' },
-  'admin': { password: 'adminpassword123', role: 'admin', credits: 9999, exp: 25000, rank: 'OG Player' },
+const MOCK_TEST_USERS: Record<string, { uid: string; password: string; role: 'user' | 'admin'; credits: number; exp: number; rank: string; streak?: number }> = {
+  'lois_123xx': { uid: '1DrJrVqcwfULvzDyyLV5S8b8ST03', password: 'password123', role: 'user', credits: 332, exp: 1251, rank: 'Gamer', streak: 3 },
+  'sherwin': { uid: 'sherwin_uid', password: 'password123', role: 'user', credits: 140, exp: 641, rank: 'Grinder', streak: 1 },
+  'Phay': { uid: 'M6JcK40OKuYGxFVH5pJaXsKwjBE3', password: 'password123', role: 'user', credits: 0, exp: 0, rank: 'Newbie', streak: 0 },
+  'admin': { uid: 'admin_test_uid', password: 'adminpassword123', role: 'admin', credits: 9999, exp: 25000, rank: 'OG Player', streak: 10 },
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -72,12 +73,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const mock = MOCK_TEST_USERS[session.username];
         if (mock) {
           setUser({
-            uid: session.uid,
+            uid: mock.uid || session.uid,
             username: session.username,
             role: mock.role,
             credits: mock.credits,
             exp: mock.exp,
             rank: mock.rank,
+            streak: mock.streak,
             isBanned: false,
             isRestricted: false,
             mustChangePassword: false,
@@ -179,12 +181,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         const authUser: AuthUser = {
-          uid: cleanUsername === 'admin' ? 'admin_test_uid' : 'player_test_uid',
+          uid: mock.uid || (cleanUsername === 'admin' ? 'admin_test_uid' : 'player_test_uid'),
           username: cleanUsername,
           role: mock.role,
           credits: mock.credits,
           exp: mock.exp,
           rank: mock.rank,
+          streak: mock.streak,
           isBanned: false,
           isRestricted: false,
           mustChangePassword: false,
