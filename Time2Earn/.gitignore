@@ -1,0 +1,22 @@
+node_modules
+dist
+*.local
+
+# Secrets & env
+.env
+.env.*
+!.env.example
+
+# Legacy data and source (contains real user data / passwords)
+legacy/*backup*
+legacy/**/*.json
+legacy/**/.env*
+
+# Firebase
+.firebase/
+firebase-debug.log
+serviceAccountKey*.json
+*-adminsdk-*.json
+
+#docs
+docs/
