@@ -1,17 +1,22 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../hooks/useAuth';
 import { useConfig } from '../../hooks/useConfig';
 import { fetchPlayerSessions } from '../../services/sessionService';
 import { fetchPlayerRedemptions } from '../../services/redemptionService';
+import { fetchPlayerDebt, fetchPlayerDebtRequests, submitDebtPaymentRequest } from '../../services/debtService';
 import { calculateRankProgress, getRankLadder } from '../../lib/ranks';
+import { DEBT_CREDIT_RATE, calculateDebtPaymentPhp } from '../../lib/debts';
+import { useToast } from '../../hooks/useToast';
 import type { SessionRequest } from '../../types/session';
 import type { RedemptionRequest } from '../../types/redemption';
+import type { DebtRecord, DebtPaymentRequest } from '../../types/debt';
 
 interface ActivityItem {
   id: string;
@@ -31,13 +36,21 @@ const PAGE_SIZE = 8;
 export const Profile: React.FC = () => {
   const { user } = useAuth();
   const { config } = useConfig();
+  const { showToast } = useToast();
 
   const [sessions, setSessions] = useState<SessionRequest[]>([]);
   const [redemptions, setRedemptions] = useState<RedemptionRequest[]>([]);
+  const [debt, setDebt] = useState<DebtRecord | null>(null);
+  const [debtRequests, setDebtRequests] = useState<DebtPaymentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [showAllLadder, setShowAllLadder] = useState(false);
+
+  // Debt Payment Modal State
+  const [isDebtModalOpen, setIsDebtModalOpen] = useState(false);
+  const [creditsToUse, setCreditsToUse] = useState<number>(38);
+  const [isSubmittingDebt, setIsSubmittingDebt] = useState(false);
 
   // Fallback demo user if not logged in
   const currentUser = user || {
@@ -52,19 +65,42 @@ export const Profile: React.FC = () => {
     isRestricted: false,
   };
 
+  const loadProfileData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [sessData, redempData, debtData, debtReqData] = await Promise.all([
+        fetchPlayerSessions(currentUser.uid, 25),
+        fetchPlayerRedemptions(currentUser.uid, 25),
+        fetchPlayerDebt(currentUser.uid),
+        fetchPlayerDebtRequests(currentUser.uid),
+      ]);
+      setSessions(sessData);
+      setRedemptions(redempData);
+      setDebt(debtData);
+      setDebtRequests(debtReqData);
+    } catch (err) {
+      console.warn('Error fetching player history:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser.uid]);
+
   useEffect(() => {
     let isMounted = true;
     const loadHistory = async () => {
       setLoading(true);
       try {
-        // Query player's own data with query limits
-        const [sessData, redempData] = await Promise.all([
+        const [sessData, redempData, debtData, debtReqData] = await Promise.all([
           fetchPlayerSessions(currentUser.uid, 25),
           fetchPlayerRedemptions(currentUser.uid, 25),
+          fetchPlayerDebt(currentUser.uid),
+          fetchPlayerDebtRequests(currentUser.uid),
         ]);
         if (isMounted) {
           setSessions(sessData);
           setRedemptions(redempData);
+          setDebt(debtData);
+          setDebtRequests(debtReqData);
         }
       } catch (err) {
         console.warn('Error fetching player history:', err);
@@ -78,6 +114,44 @@ export const Profile: React.FC = () => {
       isMounted = false;
     };
   }, [currentUser.uid]);
+
+  const handleSubmitDebtPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!debt || debt.amount <= 0) {
+      showToast('You have no outstanding debt to pay.', 'info');
+      return;
+    }
+    if (creditsToUse <= 0) {
+      showToast('Please enter an amount of credits greater than 0.', 'error');
+      return;
+    }
+    if (creditsToUse > currentUser.credits) {
+      showToast(`Insufficient credits. You only have ${currentUser.credits} Credits.`, 'error');
+      return;
+    }
+
+    setIsSubmittingDebt(true);
+    try {
+      await submitDebtPaymentRequest({
+        userId: currentUser.uid,
+        username: currentUser.username,
+        currentDebt: debt.amount,
+        creditsToUse: Number(creditsToUse),
+        userCredits: currentUser.credits,
+      });
+
+      showToast(
+        `Debt payment request submitted! ₱${calculateDebtPaymentPhp(creditsToUse).toFixed(2)} relief pending approval.`,
+        'success'
+      );
+      setIsDebtModalOpen(false);
+      await loadProfileData();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to submit payment request.', 'error');
+    } finally {
+      setIsSubmittingDebt(false);
+    }
+  };
 
   // Rank progression details
   const rankProgress = useMemo(() => {
@@ -336,7 +410,70 @@ export const Profile: React.FC = () => {
         </div>
       </Card>
 
-      {/* 4. Combined Activity & History Timeline */}
+      {/* 4. Shop Debt Account Card */}
+      <Card
+        variant={debt && debt.amount > 0 ? 'neon' : 'default'}
+        header={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>SHOP DEBT ACCOUNT</span>
+              {debt && debt.isRestricted && (
+                <Badge variant="danger" size="sm">CLAIMS RESTRICTED</Badge>
+              )}
+            </div>
+            <Badge variant={debt && debt.amount > 0 ? 'warning' : 'success'} size="sm">
+              {debt && debt.amount > 0 ? `₱${debt.amount.toFixed(2)} (${debt.tier.toUpperCase()})` : 'CLEAR (₱0.00)'}
+            </Badge>
+          </div>
+        }
+        footer={
+          debt && debt.amount > 0 ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Rate: 1 Credit = ₱{DEBT_CREDIT_RATE} debt relief
+              </span>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  setCreditsToUse(Math.min(currentUser.credits, Math.ceil(debt.amount / DEBT_CREDIT_RATE)));
+                  setIsDebtModalOpen(true);
+                }}
+                disabled={currentUser.credits <= 0 || debtRequests.some((r) => r.status === 'pending')}
+              >
+                {debtRequests.some((r) => r.status === 'pending') ? 'Payment Pending Approval' : 'Pay Debt with Credits'}
+              </Button>
+            </div>
+          ) : undefined
+        }
+      >
+        {debt && debt.amount > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
+              You have an outstanding shop balance of <strong>₱{debt.amount.toFixed(2)}</strong>.
+              {debt.daysOverdue > 0 && ` Overdue by ${debt.daysOverdue} days.`}
+            </p>
+
+            {debt.isRestricted && (
+              <div style={{ padding: '0.65rem 0.85rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', color: 'var(--danger)' }}>
+                ⚠️ High Debt Restriction Active (₱30+). Playtime session claims and reward redemptions are locked until your debt is reduced below ₱30.00.
+              </div>
+            )}
+
+            {debtRequests.some((r) => r.status === 'pending') && (
+              <div style={{ padding: '0.65rem 0.85rem', backgroundColor: 'rgba(255, 183, 3, 0.1)', border: '1px solid rgba(255, 183, 3, 0.3)', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', color: 'var(--accent-gold)' }}>
+                ⏳ You have a pending credit debt payment of ₱{debtRequests.find((r) => r.status === 'pending')?.phpEquivalent.toFixed(2)} ({debtRequests.find((r) => r.status === 'pending')?.creditsToUse} CR) awaiting admin approval.
+              </div>
+            )}
+          </div>
+        ) : (
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
+            Your account is completely clear of shop debts. When debts occur, payments can be made with spendable credits at <strong>₱{DEBT_CREDIT_RATE} per credit</strong>.
+          </p>
+        )}
+      </Card>
+
+      {/* 5. Combined Activity & History Timeline */}
       <Card
         variant="default"
         header={
@@ -503,6 +640,84 @@ export const Profile: React.FC = () => {
           </p>
         </div>
       </Card>
+
+      {/* Pay Debt with Credits Modal */}
+      <Modal
+        isOpen={isDebtModalOpen}
+        onClose={() => setIsDebtModalOpen(false)}
+        title="PAY DEBT WITH CREDITS"
+        size="md"
+      >
+        <form onSubmit={handleSubmitDebtPayment} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ backgroundColor: 'var(--bg-elevated)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Current Shop Debt:</span>
+              <strong style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>
+                ₱{debt?.amount.toFixed(2)}
+              </strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Your Available Balance:</span>
+              <strong style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+                {currentUser.credits.toLocaleString()} CR
+              </strong>
+            </div>
+          </div>
+
+          <div style={{ padding: '0.65rem 0.85rem', backgroundColor: 'rgba(0, 229, 255, 0.08)', borderRadius: 'var(--radius-xs)', fontSize: '0.8rem', color: 'var(--primary)' }}>
+            💡 Conversion Rate: <strong>1 Credit = ₱0.40 debt relief</strong> (₱{DEBT_CREDIT_RATE} / credit).
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+              CREDITS TO USE *
+            </label>
+            <input
+              type="number"
+              min="1"
+              max={currentUser.credits}
+              required
+              value={creditsToUse}
+              onChange={(e) => setCreditsToUse(Math.max(1, Number(e.target.value)))}
+              style={{
+                width: '100%',
+                padding: '0.65rem 0.85rem',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-medium)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--text-primary)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '1.1rem',
+              }}
+            />
+          </div>
+
+          {/* Dynamic Calculation Preview */}
+          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.4)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-xs)', fontSize: '0.85rem' }}>
+            <div>
+              Debt Relief Preview:{' '}
+              <strong style={{ color: 'var(--success)', fontFamily: 'var(--font-mono)' }}>
+                ₱{calculateDebtPaymentPhp(creditsToUse).toFixed(2)}
+              </strong>
+            </div>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.2rem' }}>
+              Remaining Debt After Payment:{' '}
+              <span style={{ fontFamily: 'var(--font-mono)' }}>
+                ₱{Math.max(0, (debt?.amount || 0) - calculateDebtPaymentPhp(creditsToUse)).toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <Button type="button" variant="ghost" onClick={() => setIsDebtModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" isLoading={isSubmittingDebt}>
+              Submit Payment Request
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
