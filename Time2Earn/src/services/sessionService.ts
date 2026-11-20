@@ -208,6 +208,43 @@ export async function fetchPlayerSessions(userId: string, maxLimit = 25): Promis
 }
 
 /**
+ * Fetches recent sessions for admin review with filtering
+ */
+export async function fetchRecentSessionsAdmin(statusFilter: 'all' | 'pending' | 'resolved' = 'all'): Promise<SessionRequest[]> {
+  if (hasValidFirebaseConfig) {
+    let q;
+    if (statusFilter === 'pending') {
+      q = query(collection(db, 'session_requests'), where('status', '==', 'pending'), orderBy('requestedAt', 'desc'), limit(50));
+    } else if (statusFilter === 'resolved') {
+      q = query(collection(db, 'session_requests'), where('status', 'in', ['approved', 'rejected']), orderBy('requestedAt', 'desc'), limit(50));
+    } else {
+      q = query(collection(db, 'session_requests'), orderBy('requestedAt', 'desc'), limit(50));
+    }
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        userId: String(data.userId),
+        username: String(data.username),
+        unitId: String(data.unitId),
+        amountPaid: Number(data.amountPaid),
+        creditsEarned: Number(data.creditsEarned),
+        status: data.status,
+        requestedAt: data.requestedAt,
+        resolvedAt: data.resolvedAt || null,
+        rejectNote: String(data.rejectNote || ''),
+      };
+    });
+  } else {
+    const local = getLocalSessions();
+    if (statusFilter === 'pending') return local.filter((s) => s.status === 'pending');
+    if (statusFilter === 'resolved') return local.filter((s) => s.status === 'approved' || s.status === 'rejected');
+    return local;
+  }
+}
+
+/**
  * Fetches pending session requests for Admin queue
  */
 export async function fetchPendingSessions(): Promise<SessionRequest[]> {

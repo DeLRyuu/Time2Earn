@@ -17,6 +17,7 @@ import { AdminRedemptions } from './pages/admin/AdminRedemptions';
 import { AdminDebts } from './pages/admin/AdminDebts';
 import { AdminRewards } from './pages/admin/AdminRewards';
 import { AdminUsers } from './pages/admin/AdminUsers';
+import { AdminLogs } from './pages/admin/AdminLogs';
 import { AdminSettings } from './pages/admin/AdminSettings';
 
 // Auth & Fallbacks
@@ -64,6 +65,7 @@ function App() {
           <Route path="debts" element={<AdminDebts />} />
           <Route path="rewards" element={<AdminRewards />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="logs" element={<AdminLogs />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 

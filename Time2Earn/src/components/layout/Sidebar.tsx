@@ -48,6 +48,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isAdmin = false }) => {
               <span className="link-icon">👥</span>
               <span>Player Accounts</span>
             </NavLink>
+            <NavLink to="/admin/logs" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+              <span className="link-icon">📜</span>
+              <span>Audit Logs</span>
+            </NavLink>
             <NavLink to="/admin/settings" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
               <span className="link-icon">⚙️</span>
               <span>System Config</span>
