@@ -1,0 +1,149 @@
+.app-header {
+  height: var(--header-height);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 700;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .app-header {
+    padding: 0 1.5rem;
+  }
+}
+
+.header-mobile-brand {
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .header-mobile-brand {
+    display: none;
+  }
+}
+
+.mobile-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.mobile-brand-logo {
+  font-size: 1.25rem;
+  color: var(--primary);
+  filter: drop-shadow(0 0 6px var(--primary-glow));
+}
+
+.mobile-brand-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.mobile-brand-title .highlight {
+  color: var(--primary);
+}
+
+.header-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.player-quick-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.credits-pill {
+  border-color: rgba(0, 229, 255, 0.4);
+  color: var(--primary);
+}
+
+.credits-pill .stat-label {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+}
+
+.exp-pill {
+  border-color: rgba(255, 183, 3, 0.4);
+  color: var(--accent-gold);
+}
+
+.exp-pill .stat-label {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+}
+
+@media (max-width: 480px) {
+  .exp-pill {
+    display: none;
+  }
+}
+
+.rank-badge-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
+}
+
+.login-link {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
+}
+
+.login-link:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.login-avatar {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 400px) {
+  .login-label {
+    display: none;
+  }
+}
