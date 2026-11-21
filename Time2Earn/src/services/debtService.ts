@@ -19,6 +19,7 @@ import {
   calculateDebtPaymentPhp,
   calculateRemainingDebt,
 } from '../lib/debts';
+import { assertRateLimit, RATE_LIMITS } from '../lib/rateLimit';
 
 const LOCAL_DEBTS_KEY = 't2e_local_debts';
 const LOCAL_DEBT_REQUESTS_KEY = 't2e_local_debt_requests';
@@ -244,6 +245,9 @@ export async function submitDebtPaymentRequest(params: {
 }): Promise<DebtPaymentRequest> {
   const { userId, username, currentDebt, creditsToUse, userCredits, note = '' } = params;
 
+  // Rate limiting guard
+  assertRateLimit(userId, RATE_LIMITS.DEBT_PAYMENT_SUBMIT, 'debt payment request');
+
   if (creditsToUse <= 0) {
     throw new Error('Please specify an amount of credits to use greater than 0.');
   }
@@ -398,6 +402,11 @@ export async function approveDebtPaymentRequest(
       }
 
       const targetUserId = String(reqData.userId);
+
+      // Guard: Staff cannot approve their own debt payment
+      if (targetUserId === adminUser.uid) {
+        throw new Error('Action blocked: Staff members cannot approve their own debt payment requests.');
+      }
       const creditsToUse = Number(reqData.creditsToUse);
       const userRef = doc(db, 'users', targetUserId);
       const debtRef = doc(db, 'debts', targetUserId);
@@ -488,6 +497,9 @@ export async function approveDebtPaymentRequest(
     const requests = getLocalDebtRequests();
     const req = requests.find((r) => r.id === requestId);
     if (!req) throw new Error('Payment request not found.');
+    if (req.userId === adminUser.uid) {
+      throw new Error('Action blocked: Staff members cannot approve their own debt payment requests.');
+    }
     if (req.status !== 'pending') throw new Error(`Request has already been ${req.status}.`);
 
     const debts = getLocalDebts();

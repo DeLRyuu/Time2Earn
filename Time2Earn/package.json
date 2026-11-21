@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:security": "node -e \"import('vite').then(async ({ createServer }) => { const s = await createServer({ server: { middlewareMode: true } }); const m = await s.ssrLoadModule('./src/services/securityRules.test.ts'); const p = await m.runSecurityTests(); await s.close(); process.exit(p ? 0 : 1); });\"",
+    "test": "node -e \"import('vite').then(async ({ createServer }) => { const s = await createServer({ server: { middlewareMode: true } }); const sm = await s.ssrLoadModule('./src/services/securityRules.test.ts'); const sp = await sm.runSecurityTests(); const dm = await s.ssrLoadModule('./src/services/dataVerification.test.ts'); const dp = dm.runDataVerificationTests(); await s.close(); process.exit((sp && dp) ? 0 : 1); });\""
   },
   "dependencies": {
     "firebase": "^13.4.0",

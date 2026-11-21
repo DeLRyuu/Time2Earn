@@ -6,6 +6,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../hooks/useAuth';
+import { assertRateLimit, RATE_LIMITS } from '../../lib/rateLimit';
 import { useToast } from '../../hooks/useToast';
 import { doc, updateDoc, collection, addDoc } from 'firebase/firestore';
 import { db, hasValidFirebaseConfig } from '../../lib/firebase';
@@ -139,6 +140,13 @@ export const AdminUsers: React.FC = () => {
 
   const handleExecuteReset = async () => {
     if (!userForReset || !currentAdmin) return;
+
+    try {
+      assertRateLimit(currentAdmin.uid, RATE_LIMITS.STAFF_RESET, 'staff password reset');
+    } catch (rateErr) {
+      showToast(rateErr instanceof Error ? rateErr.message : 'Rate limit exceeded.', 'error');
+      return;
+    }
 
     setIsResetting(true);
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);

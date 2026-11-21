@@ -16,6 +16,7 @@ import type { AuthUser } from '../types/auth';
 import { calculateCreditPreview, calculateAwardedCredits, calculateAwardedExp } from '../lib/credits';
 import { calculateRankProgress } from '../lib/ranks';
 import { DEFAULT_CONFIG } from '../types/config';
+import { assertRateLimit, RATE_LIMITS } from '../lib/rateLimit';
 
 const LOCAL_SESSIONS_KEY = 't2e_local_sessions';
 
@@ -105,6 +106,9 @@ function saveLocalSessions(sessions: SessionRequest[]) {
  */
 export async function submitSessionRequest(params: SessionSubmissionParams): Promise<SessionRequest> {
   const { userId, username, unitId, amountPaid, phpToCreditRate } = params;
+
+  // Rate limiting guard
+  assertRateLimit(userId, RATE_LIMITS.SESSION_SUBMIT, 'session request');
 
   if (amountPaid <= 0) {
     throw new Error('Payment amount must be greater than 0.');
@@ -389,6 +393,9 @@ export async function approveSessionRequest(
     if (idx === -1) throw new Error('Session request not found.');
 
     const sess = sessions[idx];
+    if (sess.userId === adminUser.uid) {
+      throw new Error('Action blocked: Staff members cannot approve their own session requests.');
+    }
     if (sess.status !== 'pending') {
       throw new Error(`Request has already been ${sess.status}.`);
     }

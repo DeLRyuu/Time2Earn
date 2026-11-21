@@ -18,6 +18,7 @@ import type { AppConfig } from '../types/config';
 import { evaluateRewardEligibility } from '../lib/rewards';
 import { calculateRankProgress } from '../lib/ranks';
 import { DEFAULT_CONFIG } from '../types/config';
+import { assertRateLimit, RATE_LIMITS } from '../lib/rateLimit';
 
 const LOCAL_REDEMPTIONS_KEY = 't2e_local_redemptions';
 const LOCAL_COOLDOWNS_KEY = 't2e_local_cooldowns';
@@ -251,6 +252,9 @@ export async function submitRedemptionRequest(
   activeCooldowns: RewardCooldown[],
   hasPending: boolean
 ): Promise<RedemptionRequest> {
+  // Rate limiting guard
+  assertRateLimit(user.uid, RATE_LIMITS.REDEMPTION_SUBMIT, 'redemption request');
+
   // Authoritative re-validation before request creation
   const eligibility = evaluateRewardEligibility(reward, user, config, activeCooldowns, hasPending);
   if (!eligibility.canRedeem) {
@@ -346,6 +350,11 @@ export async function approveRedemptionRequest(
       // Idempotency: Abort if already resolved
       if (reqData.status !== 'pending') {
         throw new Error(`Request has already been ${reqData.status}.`);
+      }
+
+      // Guard: Staff cannot approve their own redemptions
+      if (reqData.userId === adminUser.uid) {
+        throw new Error('Action blocked: Staff members cannot approve their own redemption requests.');
       }
 
       // Read reward document
@@ -452,6 +461,9 @@ export async function approveRedemptionRequest(
     if (idx === -1) throw new Error('Redemption request not found.');
 
     const req = redemps[idx];
+    if (req.userId === adminUser.uid) {
+      throw new Error('Action blocked: Staff members cannot approve their own redemption requests.');
+    }
     if (req.status !== 'pending') {
       throw new Error(`Request has already been ${req.status}.`);
     }

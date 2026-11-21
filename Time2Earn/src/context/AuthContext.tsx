@@ -3,6 +3,7 @@ import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'fireb
 import { db, hasValidFirebaseConfig } from '../lib/firebase';
 import type { AuthUser, UserSession } from '../types/auth';
 import { AuthContext } from './authContextDef';
+import { assertRateLimit, RATE_LIMITS } from '../lib/rateLimit';
 
 const SESSION_STORAGE_KEY = 't2e_auth_session';
 
@@ -116,25 +117,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: msg };
     }
 
+    // Rate limiting to prevent brute-force credential stuffing
+    try {
+      assertRateLimit(cleanUsername.toLowerCase(), RATE_LIMITS.AUTH_LOGIN, 'login attempts');
+    } catch (rateErr) {
+      const msg = rateErr instanceof Error ? rateErr.message : 'Too many login attempts. Please wait.';
+      setError(msg);
+      return { success: false, error: msg };
+    }
+
     try {
       if (hasValidFirebaseConfig) {
         const q = query(collection(db, 'users'), where('username', '==', cleanUsername));
         const querySnapshot = await getDocs(q);
 
+        const genericAuthError = 'Invalid username or password.';
+
         if (querySnapshot.empty) {
-          const msg = 'Account not found. Please verify your username.';
-          setError(msg);
-          return { success: false, error: msg };
+          setError(genericAuthError);
+          return { success: false, error: genericAuthError };
         }
 
         const userDoc = querySnapshot.docs[0];
         const data = userDoc.data();
 
-        // Safe credential check (never logged or exposed)
+        // Safe credential check (constant-time equivalent / anti-enumeration)
         if (data.password !== passwordInput) {
-          const msg = 'Incorrect password.';
-          setError(msg);
-          return { success: false, error: msg };
+          setError(genericAuthError);
+          return { success: false, error: genericAuthError };
         }
 
         if (data.isBanned) {

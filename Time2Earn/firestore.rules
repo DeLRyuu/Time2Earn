@@ -40,7 +40,11 @@ service cloud.firestore {
           'totalCreditsEarned',
           'totalRedemptions',
           'redeemStreak',
-          'lastRedeemDate'
+          'lastRedeemDate',
+          'streak',
+          'streakRecoveryCharges',
+          'debtAmount',
+          'debtTier'
         ])
       );
       allow delete: if false; // Strict: Never delete user accounts
