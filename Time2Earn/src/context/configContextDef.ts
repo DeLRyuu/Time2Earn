@@ -6,6 +6,7 @@ export interface ConfigContextValue {
   loading: boolean;
   error: Error | null;
   refreshConfig: () => Promise<void>;
+  updateConfig: (newConfig: AppConfig) => void;
 }
 
 export const ConfigContext = createContext<ConfigContextValue>({
@@ -13,4 +14,5 @@ export const ConfigContext = createContext<ConfigContextValue>({
   loading: false,
   error: null,
   refreshConfig: async () => {},
+  updateConfig: () => {},
 });

@@ -1,16 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, hasValidFirebaseConfig } from '../lib/firebase';
-import { DEFAULT_CONFIG } from '../types/config';
+import { type AppConfig, DEFAULT_CONFIG } from '../types/config';
 import { ConfigContext } from './configContextDef';
+import { getLocalConfig, saveLocalConfig } from '../services/configService';
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [config, setConfig] = useState(DEFAULT_CONFIG);
+  const [config, setConfig] = useState<AppConfig>(getLocalConfig);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchConfig = useCallback(async () => {
     if (!hasValidFirebaseConfig) {
+      setConfig(getLocalConfig());
       setLoading(false);
       return;
     }
@@ -20,7 +22,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const snap = await getDoc(configRef);
       if (snap.exists()) {
         const data = snap.data();
-        setConfig({
+        const loaded: AppConfig = {
           sessionRatePerHour: Number(data.sessionRatePerHour ?? DEFAULT_CONFIG.sessionRatePerHour),
           phpToCreditRate: Number(data.phpToCreditRate ?? DEFAULT_CONFIG.phpToCreditRate),
           creditToPhpRate: Number(data.creditToPhpRate ?? DEFAULT_CONFIG.creditToPhpRate),
@@ -29,14 +31,24 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           debtTiers: data.debtTiers ?? DEFAULT_CONFIG.debtTiers,
           rankThresholds: data.rankThresholds ?? DEFAULT_CONFIG.rankThresholds,
           updatedAt: data.updatedAt,
-        });
+        };
+        setConfig(loaded);
+        saveLocalConfig(loaded);
+      } else {
+        setConfig(getLocalConfig());
       }
     } catch (err) {
       console.error('Error fetching Firestore config/settings:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
+      setConfig(getLocalConfig());
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const updateConfig = useCallback((newConfig: AppConfig) => {
+    setConfig(newConfig);
+    saveLocalConfig(newConfig);
   }, []);
 
   useEffect(() => {
@@ -52,7 +64,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [fetchConfig]);
 
   return (
-    <ConfigContext.Provider value={{ config, loading, error, refreshConfig: fetchConfig }}>
+    <ConfigContext.Provider value={{ config, loading, error, refreshConfig: fetchConfig, updateConfig }}>
       {children}
     </ConfigContext.Provider>
   );
