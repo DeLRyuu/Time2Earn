@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Badge } from '../ui/Badge';
+import { RankBadge } from '../ui/RankBadge';
 import { useAuth } from '../../hooks/useAuth';
 import './Header.css';
 
@@ -40,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdmin = false }) => {
               <span className="stat-label">EXP</span>
             </div>
             <div className="rank-badge-wrap">
-              <Badge variant="gold" size="sm">{user.rank}</Badge>
+              <RankBadge rank={user.rank} size="sm" />
             </div>
           </div>
         )}

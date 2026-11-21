@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { RankBadge } from '../../components/ui/RankBadge';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -271,8 +272,8 @@ export const Profile: React.FC = () => {
             <span style={{ fontSize: '1.75rem' }}>🏆</span>
             <div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>CURRENT RANK</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {currentUser.rank}
+              <div style={{ marginTop: '0.25rem' }}>
+                <RankBadge rank={currentUser.rank} size="md" />
               </div>
             </div>
           </div>
@@ -380,9 +381,7 @@ export const Profile: React.FC = () => {
                   </span>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: isCurrent ? 800 : 600, color: isCurrent ? 'var(--accent-gold)' : 'var(--text-primary)' }}>
-                        {tier.name}
-                      </span>
+                      <RankBadge rank={tier.name} size="sm" />
                       {isCurrent && <Badge variant="gold" size="sm">CURRENT</Badge>}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>

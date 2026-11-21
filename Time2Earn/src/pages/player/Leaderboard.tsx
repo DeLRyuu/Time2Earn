@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { RankBadge } from '../../components/ui/RankBadge';
 import { useConfig } from '../../hooks/useConfig';
 
 export const Leaderboard: React.FC = () => {
@@ -44,7 +45,7 @@ export const Leaderboard: React.FC = () => {
                 <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{u.name}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Badge variant={u.rank === 1 ? 'gold' : 'neutral'} size="sm">{u.badge}</Badge>
+                <RankBadge rank={u.badge} size="sm" />
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--primary)' }}>
                   {u.exp} EXP
                 </span>

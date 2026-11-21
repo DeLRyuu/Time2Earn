@@ -1,0 +1,67 @@
+.gain-feedback-overlay {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.gain-feedback-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  animation: gain-float-up 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.gain-credits {
+  background: rgba(16, 185, 129, 0.95);
+  color: #ffffff;
+  border: 1px solid #34d399;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.gain-exp {
+  background: rgba(139, 92, 246, 0.95);
+  color: #ffffff;
+  border: 1px solid #a78bfa;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+}
+
+@keyframes gain-float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0) scale(1.05);
+  }
+  30% {
+    transform: translateY(0) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gain-feedback-chip {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

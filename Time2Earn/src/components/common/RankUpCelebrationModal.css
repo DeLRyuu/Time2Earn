@@ -1,0 +1,128 @@
+.celebration-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(8, 11, 17, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: celebration-fade-in 0.3s ease-out;
+}
+
+.celebration-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(180deg, #131b2e 0%, #0b1120 100%);
+  border: 2px solid var(--accent-gold);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(255, 183, 3, 0.35), 0 20px 40px rgba(0, 0, 0, 0.8);
+  animation: celebration-card-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+}
+
+/* Glowing background burst */
+.celebration-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 183, 3, 0.15) 0%, transparent 60%);
+  animation: burst-rotate 10s linear infinite;
+  pointer-events: none;
+}
+
+.celebration-header {
+  position: relative;
+  z-index: 1;
+}
+
+.celebration-badge-wrapper {
+  margin: 1.25rem auto;
+  position: relative;
+  display: inline-block;
+  animation: badge-bounce 0.8s ease-out;
+}
+
+.celebration-badge-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(255, 183, 3, 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: 0;
+  animation: glow-pulse 1.2s infinite alternate;
+}
+
+.celebration-particles {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  animation: sparks-float 0.8s ease-out;
+}
+
+.perks-box {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  margin: 1.25rem 0;
+  font-size: 0.825rem;
+  text-align: left;
+}
+
+@keyframes celebration-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes celebration-card-pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes burst-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes badge-bounce {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes glow-pulse {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; }
+}
+
+@keyframes sparks-float {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebration-overlay,
+  .celebration-card,
+  .celebration-card::before,
+  .celebration-badge-wrapper,
+  .celebration-badge-glow,
+  .celebration-particles {
+    animation: none !important;
+  }
+}

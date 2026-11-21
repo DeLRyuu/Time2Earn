@@ -19,9 +19,9 @@ export const Arcade: React.FC = () => {
         <EmptyState
           icon={<span>🕹️</span>}
           title="ARCADE MINI-GAMES INCOMING"
-          description="Mini-games, daily arcade challenges, and streak shields connect in Phase 8."
-          actionText="Test Arcade Ping"
-          onAction={() => showToast('Arcade engine ready for Phase 8.', 'success')}
+          description="Mini-games, daily arcade challenges, and streak shields are preparing for launch."
+          actionText="Ping Arcade Machine"
+          onAction={() => showToast('Arcade engine connected and ready.', 'success')}
         />
       </Card>
     </div>

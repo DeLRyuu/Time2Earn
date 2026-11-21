@@ -2,9 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { RankBadge } from '../../components/ui/RankBadge';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
+import { CooldownTimer } from '../../components/common/CooldownTimer';
 import { useAuth } from '../../hooks/useAuth';
 import { useConfig } from '../../hooks/useConfig';
 import { useToast } from '../../hooks/useToast';
@@ -256,10 +258,10 @@ export const Rewards: React.FC = () => {
                     {reward.description}
                   </p>
 
-                  <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                    <Badge variant="gold" size="sm">Min: {reward.minRank}</Badge>
+                  <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <RankBadge rank={reward.minRank} size="sm" />
                     <Badge variant="neutral" size="sm">
-                      {reward.cooldownMinutes > 0 ? `⏱️ ${reward.cooldownMinutes}m cooldown` : '⚡ Instant'}
+                      {reward.cooldownMinutes > 0 ? `⏱️ ${reward.cooldownMinutes}m cd` : '⚡ Instant'}
                     </Badge>
                   </div>
                 </div>
@@ -284,7 +286,13 @@ export const Rewards: React.FC = () => {
                         <Badge variant="warning" size="sm">PENDING</Badge>
                       )}
                       {eligibility.state === 'on_cooldown' && (
-                        <Badge variant="danger" size="sm">{eligibility.statusMessage}</Badge>
+                        <Badge variant="warning" size="sm">
+                          {eligibility.cooldownExpiresAt ? (
+                            <CooldownTimer expiresAt={eligibility.cooldownExpiresAt} onExpire={loadShopData} />
+                          ) : (
+                            eligibility.statusMessage
+                          )}
+                        </Badge>
                       )}
                       {eligibility.state === 'locked_rank' && (
                         <Badge variant="neutral" size="sm">RANK LOCKED</Badge>
@@ -296,9 +304,33 @@ export const Rewards: React.FC = () => {
                   </div>
 
                   {/* Status explanation helper if locked */}
-                  {!eligibility.canRedeem && eligibility.statusMessage && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--danger)', marginBottom: '0.5rem', fontWeight: 600 }}>
-                      ⚠️ {eligibility.statusMessage}
+                  {!eligibility.canRedeem && (
+                    <div style={{ fontSize: '0.75rem', marginBottom: '0.5rem', fontWeight: 600 }}>
+                      {eligibility.state === 'on_cooldown' && eligibility.cooldownExpiresAt && (
+                        <span style={{ color: 'var(--warning)' }}>
+                          ⏳ Cooldown active: <CooldownTimer expiresAt={eligibility.cooldownExpiresAt} onExpire={loadShopData} />
+                        </span>
+                      )}
+                      {eligibility.state === 'locked_rank' && (
+                        <span style={{ color: 'var(--secondary)' }}>
+                          🔒 Requires {reward.minRank.toUpperCase()} ({Math.max(0, (config.rankThresholds[reward.minRank] ?? 0) - currentUser.exp).toLocaleString()} more EXP)
+                        </span>
+                      )}
+                      {eligibility.state === 'insufficient_credits' && (
+                        <span style={{ color: 'var(--danger)' }}>
+                          💰 Short by {(reward.creditCost - currentUser.credits).toLocaleString()} Credits
+                        </span>
+                      )}
+                      {eligibility.state === 'pending' && (
+                        <span style={{ color: 'var(--accent-gold)' }}>
+                          ⌛ Claim awaiting staff approval
+                        </span>
+                      )}
+                      {eligibility.state === 'inactive' && (
+                        <span style={{ color: 'var(--text-muted)' }}>
+                          🚫 Currently unavailable
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -309,7 +341,15 @@ export const Rewards: React.FC = () => {
                     style={{ width: '100%' }}
                     onClick={() => handleOpenRedeemModal(reward)}
                   >
-                    {eligibility.state === 'available' ? 'Redeem Loot' : 'Locked'}
+                    {eligibility.state === 'available'
+                      ? 'Redeem Loot'
+                      : eligibility.state === 'on_cooldown'
+                      ? 'On Cooldown'
+                      : eligibility.state === 'pending'
+                      ? 'Pending Review'
+                      : eligibility.state === 'locked_rank'
+                      ? 'Rank Locked'
+                      : 'Insufficient Credits'}
                   </Button>
                 </div>
               </Card>

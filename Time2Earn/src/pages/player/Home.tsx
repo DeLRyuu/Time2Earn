@@ -3,9 +3,12 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Badge } from '../../components/ui/Badge';
+import { RankBadge } from '../../components/ui/RankBadge';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
+import { RankUpCelebrationModal } from '../../components/common/RankUpCelebrationModal';
+import { GainFeedback, type GainFeedbackItem } from '../../components/common/GainFeedback';
 import { useAuth } from '../../hooks/useAuth';
 import { useConfig } from '../../hooks/useConfig';
 import { useToast } from '../../hooks/useToast';
@@ -33,6 +36,10 @@ export const Home: React.FC = () => {
   // Player's Session History State
   const [playerSessions, setPlayerSessions] = useState<SessionRequest[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
+
+  // Gamification & Polish States
+  const [isCelebrationOpen, setIsCelebrationOpen] = useState(false);
+  const [gainItems, setGainItems] = useState<GainFeedbackItem[]>([]);
 
   // Fallback demo user if not logged in
   const currentUser = user || {
@@ -83,6 +90,36 @@ export const Home: React.FC = () => {
   const expAward = calculateAwardedExp(creditsAward);
   const rankProgress = calculateRankProgress(currentUser.exp, config.rankThresholds);
 
+  // Check once on load/rank update if rank celebration should be shown
+  useEffect(() => {
+    let active = true;
+    const timer = setTimeout(() => {
+      if (rankProgress.currentRank && currentUser.uid && active) {
+        const storageKey = `t2e_last_celebrated_rank_${currentUser.uid}`;
+        const lastCelebrated = localStorage.getItem(storageKey);
+        if (!lastCelebrated) {
+          if (rankProgress.currentRank !== 'Newbie') {
+            setIsCelebrationOpen(true);
+          }
+        } else if (lastCelebrated !== rankProgress.currentRank) {
+          setIsCelebrationOpen(true);
+        }
+      }
+    }, 150);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [rankProgress.currentRank, currentUser.uid]);
+
+  const handleDismissCelebration = () => {
+    if (currentUser.uid) {
+      localStorage.setItem(`t2e_last_celebrated_rank_${currentUser.uid}`, rankProgress.currentRank);
+    }
+    setIsCelebrationOpen(false);
+  };
+
   const handleSubmitSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (amountPaidInput <= 0) {
@@ -99,6 +136,12 @@ export const Home: React.FC = () => {
         amountPaid: Number(amountPaidInput),
         phpToCreditRate: config.phpToCreditRate,
       });
+
+      // Trigger floating gain feedback
+      setGainItems([
+        { id: `c-${Date.now()}`, type: 'credits', amount: Math.floor(creditPreview) },
+        { id: `e-${Date.now() + 1}`, type: 'exp', amount: expAward },
+      ]);
 
       showToast(`Session claim submitted for ${selectedUnit}! Awaiting staff approval.`, 'success');
       setIsSessionModalOpen(false);
@@ -159,10 +202,10 @@ export const Home: React.FC = () => {
             <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>RANK</span>
             <span style={{ fontSize: '1.2rem' }}>🏆</span>
           </div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 900, color: 'var(--accent-gold)', marginTop: '0.35rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {currentUser.rank}
+          <div style={{ marginTop: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <RankBadge rank={currentUser.rank} size="md" />
           </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', marginTop: '0.2rem', opacity: 0.85 }}>
+          <div style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', marginTop: '0.35rem', opacity: 0.85 }}>
             {rankProgress.isMaxRank ? 'Peak Legend' : `Tier ${rankProgress.currentThreshold.toLocaleString()} EXP`}
           </div>
         </Card>
@@ -224,7 +267,7 @@ export const Home: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Badge variant="gold" size="sm">{rankProgress.currentRank}</Badge>
+                <RankBadge rank={rankProgress.currentRank} size="sm" />
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>current rank</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -232,17 +275,34 @@ export const Home: React.FC = () => {
                 {rankProgress.isMaxRank ? (
                   <Badge variant="primary" size="sm">MAX REACHED</Badge>
                 ) : (
-                  <Badge variant="secondary" size="sm">{rankProgress.nextRank}</Badge>
+                  <RankBadge rank={rankProgress.nextRank || 'Unknown'} size="sm" />
                 )}
               </div>
             </div>
 
             <ProgressBar value={rankProgress.progressPercent} max={100} variant="purple" size="md" showPercentage />
 
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'right' }}>
-              {rankProgress.isMaxRank
-                ? '⭐ Congratulations! You have reached the pinnacle OG Player tier.'
-                : `⚡ Only ${rankProgress.expRemaining.toLocaleString()} EXP needed to reach ${rankProgress.nextRank}!`}
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span>
+                {rankProgress.isMaxRank
+                  ? '⭐ Congratulations! You have reached the pinnacle OG Player tier.'
+                  : `⚡ Only ${rankProgress.expRemaining.toLocaleString()} EXP needed to reach ${rankProgress.nextRank}!`}
+              </span>
+              <button
+                onClick={() => setIsCelebrationOpen(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--accent-gold)',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  textDecoration: 'underline',
+                  padding: 0,
+                }}
+              >
+                🎉 View Celebration
+              </button>
             </div>
           </div>
         )}
@@ -534,6 +594,19 @@ export const Home: React.FC = () => {
           </div>
         </form>
       </Modal>
+      {/* 9. Floating Gain Feedback */}
+      <GainFeedback
+        items={gainItems}
+        onDismiss={(id) => setGainItems((prev) => prev.filter((i) => i.id !== id))}
+      />
+
+      {/* 10. Rank-Up Celebration Modal */}
+      <RankUpCelebrationModal
+        isOpen={isCelebrationOpen}
+        onClose={handleDismissCelebration}
+        newRank={rankProgress.currentRank}
+        exp={currentUser.exp}
+      />
     </div>
   );
 };

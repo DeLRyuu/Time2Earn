@@ -34,7 +34,14 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           {showPercentage && <span className="progress-percent">{percentage}%</span>}
         </div>
       )}
-      <div className="progress-track" role="progressbar" aria-valuenow={value} aria-valuemin={0} aria-valuemax={max}>
+      <div
+        className="progress-track"
+        role="progressbar"
+        aria-valuenow={value}
+        aria-valuemin={0}
+        aria-valuemax={max}
+        aria-label={label || 'Progress'}
+      >
         <div
           className={`progress-fill variant-${variant}`}
           style={{ width: `${percentage}%` }}
