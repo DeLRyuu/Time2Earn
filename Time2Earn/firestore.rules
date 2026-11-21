@@ -37,7 +37,10 @@ service cloud.firestore {
           'isBanned',
           'isRestricted',
           'totalSessions',
-          'totalCreditsEarned'
+          'totalCreditsEarned',
+          'totalRedemptions',
+          'redeemStreak',
+          'lastRedeemDate'
         ])
       );
       allow delete: if false; // Strict: Never delete user accounts
@@ -100,9 +103,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // 11. Logs: Admin only (audit logs contain administrative operational data)
+    // 11. Logs: Admin reads; authenticated users & admin append; no update or delete allowed (append-only)
     match /logs/{logId} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() || isAdmin();
+      allow update, delete: if false; // Strict append-only
     }
   }
 }
