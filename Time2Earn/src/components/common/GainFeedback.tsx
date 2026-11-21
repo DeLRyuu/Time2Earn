@@ -45,7 +45,7 @@ const GainFeedbackChip: React.FC<{ item: GainFeedbackItem; onDismiss: (id: strin
     <div className={`gain-feedback-chip ${isCredits ? 'gain-credits' : 'gain-exp'}`}>
       <span>{isCredits ? '💰' : '⭐'}</span>
       <span>
-        +{item.amount} {isCredits ? 'CREDITS' : 'EXP'}
+        +{item.amount} {isCredits ? 'TOKENS' : 'EXP'}
       </span>
     </div>
   );

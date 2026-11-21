@@ -119,14 +119,14 @@ export const AdminUsers: React.FC = () => {
       });
 
       showToast(
-        `Successfully ${adjustType === 'add' ? 'added' : 'deducted'} ${adjustAmount} CR for ${adjustTargetPlayer.username}. New balance: ${result.newCredits} CR`,
+        `Successfully ${adjustType === 'add' ? 'added' : 'deducted'} ${adjustAmount} Tokens for ${adjustTargetPlayer.username}. New balance: ${result.newCredits} Tokens`,
         'success'
       );
 
       setAdjustTargetPlayer(null);
       await loadPlayers();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Credit adjustment failed.', 'error');
+      showToast(err instanceof Error ? err.message : 'Token adjustment failed.', 'error');
     } finally {
       setIsAdjusting(false);
     }
@@ -195,7 +195,7 @@ export const AdminUsers: React.FC = () => {
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0 }}>PLAYERS & BALANCE CONTROL</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-            Search registered players, view verified profiles, execute credit adjustments, and manage credentials.
+            Search registered players, view verified profiles, execute token adjustments, and manage credentials.
           </p>
         </div>
 
@@ -304,10 +304,10 @@ export const AdminUsers: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                      {player.credits.toLocaleString()} CR
+                      {player.credits.toLocaleString()} Tokens
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      Spendable Credits
+                      Spendable Tokens
                     </div>
                   </div>
 
@@ -316,7 +316,7 @@ export const AdminUsers: React.FC = () => {
                       Profile
                     </Button>
                     <Button variant="primary" size="sm" onClick={() => handleOpenAdjustCredits(player)}>
-                      ± Credits
+                      ± Tokens
                     </Button>
                     <Button variant="secondary" size="sm" onClick={() => handleOpenReset(player)}>
                       Reset Pass
@@ -333,7 +333,7 @@ export const AdminUsers: React.FC = () => {
       <Modal
         isOpen={Boolean(adjustTargetPlayer)}
         onClose={() => setAdjustTargetPlayer(null)}
-        title={`MANUAL CREDIT ADJUSTMENT • ${adjustTargetPlayer?.username}`}
+        title={`MANUAL TOKEN ADJUSTMENT • ${adjustTargetPlayer?.username}`}
         size="md"
       >
         <form onSubmit={handleConfirmAdjust} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
@@ -341,7 +341,7 @@ export const AdminUsers: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Current Player Balance:</span>
               <strong style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                {adjustTargetPlayer?.credits.toLocaleString()} CR
+                {adjustTargetPlayer?.credits.toLocaleString()} Tokens
               </strong>
             </div>
           </div>
@@ -365,7 +365,7 @@ export const AdminUsers: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                + Add Credits (Award)
+                + Add Tokens (Award)
               </button>
               <button
                 type="button"
@@ -380,7 +380,7 @@ export const AdminUsers: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                - Deduct Credits (Charge)
+                - Deduct Tokens (Charge)
               </button>
             </div>
           </div>
@@ -388,7 +388,7 @@ export const AdminUsers: React.FC = () => {
           {/* Amount */}
           <div>
             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-              AMOUNT (CREDITS) *
+              AMOUNT (TOKENS) *
             </label>
             <input
               type="number"
@@ -440,8 +440,8 @@ export const AdminUsers: React.FC = () => {
             <strong style={{ color: adjustType === 'add' ? 'var(--primary)' : 'var(--accent-gold)', fontFamily: 'var(--font-mono)' }}>
               {adjustTargetPlayer && (
                 adjustType === 'add'
-                  ? `${adjustTargetPlayer.credits} + ${adjustAmount} = ${adjustTargetPlayer.credits + adjustAmount} CR`
-                  : `${adjustTargetPlayer.credits} - ${adjustAmount} = ${Math.max(0, adjustTargetPlayer.credits - adjustAmount)} CR`
+                  ? `${adjustTargetPlayer.credits} + ${adjustAmount} = ${adjustTargetPlayer.credits + adjustAmount} Tokens`
+                  : `${adjustTargetPlayer.credits} - ${adjustAmount} = ${Math.max(0, adjustTargetPlayer.credits - adjustAmount)} Tokens`
               )}
             </strong>
           </div>
@@ -455,7 +455,7 @@ export const AdminUsers: React.FC = () => {
               variant={adjustType === 'add' ? 'primary' : 'danger'}
               isLoading={isAdjusting}
             >
-              Confirm {adjustType === 'add' ? 'Credit Addition' : 'Credit Deduction'}
+              Confirm {adjustType === 'add' ? 'Token Addition' : 'Token Deduction'}
             </Button>
           </div>
         </form>
@@ -479,9 +479,9 @@ export const AdminUsers: React.FC = () => {
             {/* Quick Metrics */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
               <div style={{ backgroundColor: 'var(--bg-elevated)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>CREDITS</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>TOKENS</div>
                 <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                  {selectedPlayerDetails.credits.toLocaleString()} CR
+                  {selectedPlayerDetails.credits.toLocaleString()} Tokens
                 </div>
               </div>
               <div style={{ backgroundColor: 'var(--bg-elevated)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
@@ -522,7 +522,7 @@ export const AdminUsers: React.FC = () => {
                   {selectedPlayerDetails.recentSessions.slice(0, 5).map((s) => (
                     <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', padding: '0.4rem 0.6rem', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-xs)' }}>
                       <span>🖥️ {s.unitId} • ₱{s.amountPaid.toFixed(2)}</span>
-                      <span style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>+{s.creditsEarned} CR ({s.status})</span>
+                      <span style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>+{s.creditsEarned} Tokens ({s.status})</span>
                     </div>
                   ))}
                 </div>
@@ -541,7 +541,7 @@ export const AdminUsers: React.FC = () => {
                   {selectedPlayerDetails.recentRedemptions.slice(0, 5).map((r) => (
                     <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', padding: '0.4rem 0.6rem', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-xs)' }}>
                       <span>🎁 {r.rewardName}</span>
-                      <span style={{ color: 'var(--accent-gold)', fontFamily: 'var(--font-mono)' }}>-{r.creditCost} CR ({r.status})</span>
+                      <span style={{ color: 'var(--accent-gold)', fontFamily: 'var(--font-mono)' }}>-{r.creditCost} Tokens ({r.status})</span>
                     </div>
                   ))}
                 </div>
@@ -557,7 +557,7 @@ export const AdminUsers: React.FC = () => {
                   if (target) handleOpenAdjustCredits(target);
                 }}
               >
-                Adjust Credits
+                Adjust Tokens
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setSelectedPlayerDetails(null)}>
                 Close

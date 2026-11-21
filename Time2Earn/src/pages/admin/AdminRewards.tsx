@@ -126,7 +126,7 @@ export const AdminRewards: React.FC = () => {
       return;
     }
     if (formCreditCost <= 0) {
-      showToast('Credit cost must be greater than 0.', 'error');
+      showToast('Token cost must be greater than 0.', 'error');
       return;
     }
 
@@ -200,7 +200,7 @@ export const AdminRewards: React.FC = () => {
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0 }}>REWARDS CATALOG MANAGEMENT</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-            Configure store rewards, edit credit costs, set rank gates, and toggle active status.
+            Configure store rewards, edit token costs, set rank gates, and toggle active status.
           </p>
         </div>
 
@@ -305,7 +305,7 @@ export const AdminRewards: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                      {reward.creditCost} CR
+                      {reward.creditCost} Tokens
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--accent-gold)', fontFamily: 'var(--font-mono)' }}>
                       +{reward.expReward} EXP
@@ -429,7 +429,7 @@ export const AdminRewards: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-                CREDIT COST *
+                TOKEN COST *
               </label>
               <input
                 type="number"

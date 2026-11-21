@@ -226,7 +226,7 @@ export const AdminSettings: React.FC = () => {
           {/* PHP to Credit Rate */}
           <div>
             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-              PHP TO CREDIT RATE (SESSIONS)
+              PHP TO TOKEN RATE (SESSIONS)
             </label>
             <input
               type="number"
@@ -247,14 +247,14 @@ export const AdminSettings: React.FC = () => {
               }}
             />
             <p style={{ margin: '0.35rem 0 0', fontSize: '0.725rem', color: 'var(--text-muted)' }}>
-              Multiplier for session claims: ₱10 paid = {(10 * draftConfig.phpToCreditRate).toFixed(2)} Credits.
+              Multiplier for session claims: ₱10 paid = {(10 * draftConfig.phpToCreditRate).toFixed(2)} Tokens.
             </p>
           </div>
 
           {/* Credit to PHP Rate */}
           <div>
             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-              CREDIT TO PHP RATE (GLOBAL VALUATION)
+              TOKEN TO PHP RATE (GLOBAL VALUATION)
             </label>
             <input
               type="number"
@@ -275,7 +275,7 @@ export const AdminSettings: React.FC = () => {
               }}
             />
             <p style={{ margin: '0.35rem 0 0', fontSize: '0.725rem', color: 'var(--text-muted)' }}>
-              Global credit price: 100 Credits = ₱{(100 * draftConfig.creditToPhpRate).toFixed(2)}.
+              Global token price: 100 Tokens = ₱{(100 * draftConfig.creditToPhpRate).toFixed(2)}.
             </p>
           </div>
 

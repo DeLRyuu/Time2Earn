@@ -313,9 +313,9 @@ export const AdminLogs: React.FC = () => {
                   <option value="reward_created">Reward Created</option>
                   <option value="rewards_bulk_imported">Rewards Bulk Imported</option>
                 </optgroup>
-                <optgroup label="Credits & Balances">
-                  <option value="credits_added">Credits Added</option>
-                  <option value="credits_deducted">Credits Deducted</option>
+                <optgroup label="Tokens & Balances">
+                  <option value="credits_added">Tokens Added</option>
+                  <option value="credits_deducted">Tokens Deducted</option>
                 </optgroup>
                 <optgroup label="Debt Management">
                   <option value="debt_added">Debt Added</option>

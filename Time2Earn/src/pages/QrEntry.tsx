@@ -76,7 +76,7 @@ export const QrEntry: React.FC = () => {
             </h2>
 
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', margin: 0 }}>
-              Open your phone camera to scan this QR code, open Time2Earn, and claim your PC session credits.
+              Open your phone camera to scan this QR code, open Time2Earn, and claim your PC session tokens.
             </p>
 
             {/* High-Contrast Scannable QR Frame */}
@@ -180,7 +180,7 @@ export const QrEntry: React.FC = () => {
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <span>3️⃣</span>
-              <span>Enter your PC Unit ID and paid amount after gaming to claim Credits & EXP!</span>
+              <span>Enter your PC Unit ID and paid amount after gaming to claim Tokens & EXP!</span>
             </div>
           </div>
         </Card>

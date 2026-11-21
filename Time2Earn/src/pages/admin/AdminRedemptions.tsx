@@ -66,7 +66,7 @@ export const AdminRedemptions: React.FC = () => {
     try {
       const res = await approveRedemptionRequest(redemption.id, currentAdmin);
       showToast(
-        `Redemption approved for ${redemption.username}! -${res.creditsDeducted} CR, +${res.expAwarded} EXP`,
+        `Redemption approved for ${redemption.username}! -${res.creditsDeducted} Tokens, +${res.expAwarded} EXP`,
         'success'
       );
       await loadPending();
@@ -178,7 +178,7 @@ export const AdminRedemptions: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                      -{item.creditCost} CR
+                      -{item.creditCost} Tokens
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--secondary)' }}>
                       Deducted upon approval

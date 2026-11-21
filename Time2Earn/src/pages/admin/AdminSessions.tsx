@@ -65,7 +65,7 @@ export const AdminSessions: React.FC = () => {
     try {
       const result = await approveSessionRequest(session.id, currentAdmin);
       showToast(
-        `Session approved for ${session.username}! +${result.creditsAwarded} CR & +${result.expAwarded} EXP awarded.`,
+        `Session approved for ${session.username}! +${result.creditsAwarded} Tokens & +${result.expAwarded} EXP awarded.`,
         'success'
       );
       await loadSessions(filter);
@@ -102,7 +102,7 @@ export const AdminSessions: React.FC = () => {
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0 }}>SESSION APPROVAL QUEUE</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-            Review player playtime claims, verify PC stations, and authorize Credits & EXP awards.
+            Review player playtime claims, verify PC stations, and authorize Tokens & EXP awards.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -240,7 +240,7 @@ export const AdminSessions: React.FC = () => {
                       ₱{session.amountPaid.toFixed(2)}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                      +{Math.floor(session.creditsEarned)} CR / +{Math.floor(session.creditsEarned)} EXP
+                      +{Math.floor(session.creditsEarned)} Tokens / +{Math.floor(session.creditsEarned)} EXP
                     </div>
                   </div>
 

@@ -101,7 +101,7 @@ export const AdminDebts: React.FC = () => {
     try {
       const res = await approveDebtPaymentRequest(req.id, currentAdmin);
       showToast(
-        `Approved payment for ${req.username}! ₱${res.phpEquivalent.toFixed(2)} debt cleared (${res.creditsDeducted} CR deducted). Remaining debt: ₱${res.remainingDebt.toFixed(2)}.`,
+        `Approved payment for ${req.username}! ₱${res.phpEquivalent.toFixed(2)} debt cleared (${res.creditsDeducted} Tokens deducted). Remaining debt: ₱${res.remainingDebt.toFixed(2)}.`,
         'success'
       );
       await loadData();
@@ -193,7 +193,7 @@ export const AdminDebts: React.FC = () => {
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0 }}>SHOP DEBT MANAGEMENT</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-            Store debt ledger, credit payment request verification, and restriction controls.
+            Store debt ledger, token payment request verification, and restriction controls.
           </p>
         </div>
 
@@ -233,7 +233,7 @@ export const AdminDebts: React.FC = () => {
           <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--accent-gold)', fontFamily: 'var(--font-mono)', margin: '0.25rem 0' }}>
             {loading ? <Skeleton width="30px" height="28px" /> : pendingRequests.length}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Credit debt payment claims</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Token debt payment claims</div>
         </Card>
       </div>
 
@@ -243,7 +243,7 @@ export const AdminDebts: React.FC = () => {
           variant="neon"
           header={
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <span>PENDING CREDIT DEBT PAYMENTS</span>
+              <span>PENDING TOKEN DEBT PAYMENTS</span>
               <Badge variant="warning" size="sm">{pendingRequests.length} PENDING</Badge>
             </div>
           }
@@ -284,7 +284,7 @@ export const AdminDebts: React.FC = () => {
                       -₱{req.phpEquivalent.toFixed(2)}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                      -{req.creditsToUse} CR
+                      -{req.creditsToUse} Tokens
                     </div>
                   </div>
 
@@ -495,7 +495,7 @@ export const AdminDebts: React.FC = () => {
               <option value="">-- Choose registered player --</option>
               {players.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.username} ({p.rank} • {p.credits} CR)
+                  {p.username} ({p.rank} • {p.credits} Tokens)
                 </option>
               ))}
             </select>
@@ -631,7 +631,7 @@ export const AdminDebts: React.FC = () => {
       >
         <form onSubmit={handleConfirmReject} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-            Reject credit payment of ₱{requestToReject?.phpEquivalent.toFixed(2)} ({requestToReject?.creditsToUse} CR) for{' '}
+            Reject token payment of ₱{requestToReject?.phpEquivalent.toFixed(2)} ({requestToReject?.creditsToUse} Tokens) for{' '}
             <strong>{requestToReject?.username}</strong>.
           </p>
 
@@ -643,7 +643,7 @@ export const AdminDebts: React.FC = () => {
               type="text"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="e.g. Ineligible credits balance"
+              placeholder="e.g. Ineligible token balance"
               style={{
                 width: '100%',
                 padding: '0.65rem 0.85rem',
