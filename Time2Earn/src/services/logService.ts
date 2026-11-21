@@ -37,7 +37,7 @@ export interface LogEntry {
 
 export interface LogActionMeta {
   label: string;
-  category: 'Session' | 'Rewards' | 'Balance' | 'Debt' | 'Config' | 'Security' | 'System';
+  category: 'Session' | 'Rewards' | 'Balance' | 'Debt' | 'Config' | 'Security' | 'Arcade' | 'System';
   icon: string;
   variant: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'arcade' | 'default';
   description: string;
@@ -187,6 +187,15 @@ export const KNOWN_LOG_ACTIONS: Record<string, LogActionMeta> = {
     icon: '🔑',
     variant: 'danger',
     description: 'Staff-assisted credential reset generated',
+  },
+
+  // Arcade
+  arcade_reward_granted: {
+    label: 'Arcade Reward Granted',
+    category: 'Arcade',
+    icon: '🕹️',
+    variant: 'arcade',
+    description: 'Player earned reward from Arcade Quick Quiz',
   },
 };
 

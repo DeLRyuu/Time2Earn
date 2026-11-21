@@ -109,5 +109,12 @@ service cloud.firestore {
       allow create: if isAuthenticated() || isAdmin();
       allow update, delete: if false; // Strict append-only
     }
+
+    // 12. Arcade Sessions: Players read own sessions; create attempts; admin updates/deletes; client cannot edit results directly
+    match /arcade_sessions/{sessionId} {
+      allow read: if (resource != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
   }
 }
