@@ -1,0 +1,546 @@
+/* ==========================================================================
+   Arcade Zone Styles (Chunky Arcade Cabinet)
+   ========================================================================== */
+
+.arcade-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header */
+.arcade-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.arcade-head h1 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: clamp(30px, 4vw, 42px);
+  margin: 0;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.arcade-sub {
+  color: var(--mute);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 6px 0 0 0;
+}
+
+/* Quota & Status HUD */
+.arcade-hud {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 20px 24px;
+}
+
+.hud-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hud-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--mute);
+}
+
+.hud-val {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 28px;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.hud-bar {
+  height: 12px;
+  background: rgba(20, 23, 58, 0.4);
+  border: 2px solid var(--line);
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 4px;
+}
+
+.hud-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: repeating-linear-gradient(90deg, var(--y) 0 10px, transparent 10px 13px);
+  transition: width 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.hud-bar-fill.mint {
+  background: repeating-linear-gradient(90deg, var(--g) 0 10px, transparent 10px 13px);
+}
+
+.hud-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+  width: fit-content;
+}
+
+.hud-status-badge.ready {
+  background: var(--g);
+  color: var(--on);
+}
+
+.hud-status-badge.cooldown {
+  background: var(--y);
+  color: var(--on);
+}
+
+.hud-status-badge.limit {
+  background: var(--panel2);
+  color: var(--mute);
+}
+
+.hud-status-badge.danger {
+  background: var(--r);
+  color: #ffffff;
+}
+
+/* Games Grid */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.game-card {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  transition: transform 0.15s ease;
+}
+
+.game-card.featured {
+  border-color: var(--y);
+  box-shadow: 0 6px 0 var(--line), 0 0 0 2px var(--y);
+}
+
+.game-scr {
+  height: 130px;
+  border-radius: 14px;
+  border: 3px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: var(--on);
+  position: relative;
+  overflow: hidden;
+}
+
+.game-scr svg {
+  width: 60px;
+  height: 60px;
+  position: relative;
+  z-index: 2;
+}
+
+.game-scr-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--on);
+  color: var(--y);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+  z-index: 3;
+}
+
+.game-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.game-info h3 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 24px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.game-reward {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mute);
+  margin: 0;
+}
+
+.game-btn {
+  background: var(--y);
+  color: var(--on);
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 18px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 var(--line);
+  padding: 12px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  width: 100%;
+}
+
+.game-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.game-btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.game-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 0 var(--line);
+}
+
+/* Tier Rules Card */
+.arcade-tiers-card {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.arcade-tiers-card h2 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 22px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.tiers-table-wrapper {
+  overflow-x: auto;
+}
+
+.tiers-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.tiers-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 16px;
+  color: var(--mute);
+  border-bottom: 3px solid var(--line);
+}
+
+.tiers-table td {
+  padding: 12px 14px;
+  border-bottom: 2px solid rgba(7, 9, 32, 0.4);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tiers-table td.reward-tokens {
+  color: var(--y);
+}
+
+.tiers-table td.reward-exp {
+  color: var(--v);
+}
+
+.arcade-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mute);
+  background: rgba(20, 23, 58, 0.3);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+/* Playing View */
+.quiz-cabinet {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.quiz-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.quiz-step {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 20px;
+  color: var(--y);
+}
+
+.quiz-timer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 18px;
+  background: var(--panel2);
+  color: var(--ink);
+}
+
+.quiz-timer-chip.urgent {
+  background: var(--r);
+  color: #ffffff;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
+}
+
+.quiz-question-box {
+  background: var(--panel2);
+  border: 3px solid var(--line);
+  border-radius: 16px;
+  padding: 22px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--ink);
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quiz-opt-btn {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 4px 0 var(--line);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
+  min-height: 56px;
+}
+
+.quiz-opt-btn:hover {
+  background: var(--panel2);
+}
+
+.quiz-opt-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.quiz-opt-btn.selected {
+  background: var(--s);
+  color: var(--on);
+  box-shadow: 0 4px 0 var(--line);
+  border-color: var(--line);
+}
+
+.quiz-opt-letter {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 16px;
+  background: rgba(20, 23, 58, 0.2);
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.quiz-opt-btn.selected .quiz-opt-letter {
+  background: var(--on);
+  color: var(--s);
+}
+
+.quiz-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Result & Celebration */
+.quiz-result-card {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.result-banner {
+  text-align: center;
+  padding: 24px;
+  border-radius: 16px;
+  border: 3px solid var(--line);
+  background: var(--panel2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.result-banner svg {
+  width: 64px;
+  height: 64px;
+  color: var(--y);
+}
+
+.result-tier-title {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 32px;
+  margin: 0;
+  color: var(--y);
+}
+
+.result-score-line {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.result-rewards-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.reward-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 18px;
+  color: var(--on);
+}
+
+.reward-pill.tokens {
+  background: var(--y);
+}
+
+.reward-pill.exp {
+  background: var(--v);
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.review-item {
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 18px;
+  background: var(--panel2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.review-item.correct {
+  border-left: 6px solid var(--g);
+}
+
+.review-item.incorrect {
+  border-left: 6px solid var(--r);
+}
+
+.review-q {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.review-ans {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.review-ans.good {
+  color: var(--g);
+}
+
+.review-ans.bad {
+  color: var(--r);
+}
+
+.review-exp {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mute);
+  margin-top: 4px;
+}

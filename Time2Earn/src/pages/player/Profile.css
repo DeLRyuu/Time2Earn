@@ -1,0 +1,331 @@
+/* ==========================================================================
+   Player Profile & Debts Styles (Chunky Arcade Cabinet)
+   ========================================================================== */
+
+.profile-view {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.profile-head h1 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: clamp(30px, 4vw, 42px);
+  margin: 0;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.profile-sub {
+  color: var(--mute);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 6px 0 0 0;
+}
+
+/* Stat Grid */
+.profile-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.profile-stat-card {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-stat-card.tokens {
+  border-color: var(--y);
+  box-shadow: 0 6px 0 var(--line), 0 0 0 1px var(--y);
+}
+
+.stat-icon-tile {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 3px solid var(--line);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--on);
+  box-shadow: 0 3px 0 var(--line);
+}
+
+.stat-icon-tile.tokens {
+  background: var(--y);
+}
+
+.stat-icon-tile.rank {
+  background: var(--v);
+}
+
+.stat-icon-tile.exp {
+  background: var(--s);
+}
+
+.stat-icon-tile.streak {
+  background: var(--r);
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--mute);
+}
+
+.stat-val {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 26px;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+/* Section Card */
+.profile-panel {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.panel-title {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 24px;
+  margin: 0;
+  color: var(--ink);
+}
+
+/* Rank Ladder */
+.ladder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ladder-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel2);
+  gap: 12px;
+  transition: transform 0.1s ease;
+}
+
+.ladder-item.current {
+  border: 3px solid var(--y);
+  background: rgba(255, 201, 60, 0.12);
+  box-shadow: 0 4px 0 var(--line);
+  transform: scale(1.01);
+}
+
+.ladder-item.reached {
+  border-color: var(--g);
+}
+
+.ladder-item.locked {
+  opacity: 0.65;
+}
+
+.ladder-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Debt Box */
+.debt-card {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.debt-card.has-debt {
+  border-color: var(--r);
+  box-shadow: 0 6px 0 var(--line), 0 0 0 1px var(--r);
+}
+
+.debt-banner {
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.debt-banner.danger {
+  background: rgba(255, 90, 95, 0.15);
+  border-color: var(--r);
+  color: var(--r);
+}
+
+.debt-banner.warning {
+  background: rgba(255, 201, 60, 0.15);
+  border-color: var(--y);
+  color: var(--y);
+}
+
+/* Timeline Activity */
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  background: var(--panel2);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.filter-tab-btn {
+  background: transparent;
+  border: none;
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 15px;
+  color: var(--mute);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.filter-tab-btn.active {
+  background: var(--s);
+  color: var(--on);
+  box-shadow: 0 2px 0 var(--line);
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.activity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--panel2);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.activity-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.activity-icon-tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: var(--on);
+}
+
+.activity-icon-tile.session {
+  background: var(--s);
+}
+
+.activity-icon-tile.redemption {
+  background: var(--r);
+}
+
+.activity-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.activity-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.activity-sub {
+  font-size: 13px;
+  color: var(--mute);
+}
+
+.activity-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.activity-delta {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 20px;
+}
+
+.activity-delta.plus {
+  color: var(--g);
+}
+
+.activity-delta.minus {
+  color: var(--r);
+}
+
+/* Badges */
+.status-pill {
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+  color: var(--on);
+}
+
+.status-pill.approved {
+  background: var(--g);
+}
+
+.status-pill.pending {
+  background: var(--y);
+}
+
+.status-pill.rejected {
+  background: var(--r);
+  color: #ffffff;
+}

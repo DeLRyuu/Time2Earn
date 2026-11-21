@@ -18,5 +18,6 @@ firebase-debug.log
 serviceAccountKey*.json
 *-adminsdk-*.json
 
-#docs
-docs/
+# Personal Keep Files
+legacy/
+ui-ux-reference/

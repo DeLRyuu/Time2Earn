@@ -1,139 +1,293 @@
+/**
+ * Time2Earn: Chunky Arcade Cabinet Design System
+ * Defined in docs/AGENTS.md & ui-ux-reference/time2earn-redesign.html
+ */
+
 :root {
-  /* Color Palette - Cyber Dark Gaming Theme */
-  --bg-app: #080b11;
-  --bg-surface: #0f172a;
-  --bg-elevated: #1e293b;
-  --bg-card: rgba(15, 23, 42, 0.85);
-  --bg-overlay: rgba(8, 11, 17, 0.8);
+  /* Color Tokens - Dark Mode (Default) */
+  --bg: #14173A;
+  --panel: #1E2358;
+  --panel2: #2A3176;
+  --line: #070920;
+  --ink: #F6F3FF;
+  --mute: #B4BAEF;
+  --y: #FFC93C;
+  --y-text: #FFC93C;
+  --r: #FF5A5F;
+  --g: #36D9A0;
+  --s: #5CC8FF;
+  --v: #B39CFF;
+  --v-text: #B39CFF;
+  --on: #14173A;
 
-  /* Brand Accents */
-  --primary: #00e5ff;
-  --primary-hover: #33ecff;
-  --primary-glow: rgba(0, 229, 255, 0.25);
-  --primary-dim: rgba(0, 229, 255, 0.12);
+  /* Legacy & Theme Compatibility Aliases */
+  --bg-app: var(--bg);
+  --bg-surface: var(--panel);
+  --bg-elevated: var(--panel2);
+  --bg-card: var(--panel);
+  --primary: var(--y);
+  --primary-hover: #ffd55c;
+  --primary-glow: rgba(255, 201, 60, 0.25);
+  --secondary: var(--v);
+  --accent-gold: var(--y);
+  --success: var(--g);
+  --danger: var(--r);
+  --text-primary: var(--ink);
+  --text-secondary: var(--mute);
+  --text-muted: var(--mute);
+  --border-subtle: var(--line);
+  --border-medium: var(--line);
 
-  --secondary: #8b5cf6;
-  --secondary-hover: #a78bfa;
-  --secondary-glow: rgba(139, 92, 246, 0.25);
-
-  --accent-gold: #ffb703;
-  --accent-gold-glow: rgba(255, 183, 3, 0.3);
-
-  --success: #10b981;
-  --success-glow: rgba(16, 185, 129, 0.25);
-
-  --danger: #ef4444;
-  --danger-glow: rgba(239, 68, 68, 0.25);
-
-  --warning: #f59e0b;
-  --warning-glow: rgba(245, 158, 11, 0.25);
-
-  /* Borders & Dividers */
-  --border-subtle: #1e293b;
-  --border-medium: #334155;
-  --border-neon: rgba(0, 229, 255, 0.4);
-
-  /* Typography */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-inverse: #080b11;
-
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
-  /* Sizing & Radius */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.8);
-  --shadow-neon: 0 0 15px var(--primary-glow);
-  --shadow-gold: 0 0 15px var(--accent-gold-glow);
-
-  /* Layout dimensions */
-  --header-height: 64px;
-  --bottom-nav-height: 64px;
-  --sidebar-width: 250px;
-}
-
-/* Base reset */
-*, *::before, *::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
-html, body {
-  background-color: var(--bg-app);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  width: 100%;
-  min-height: 100%;
-  overflow-x: hidden; /* Strict: prevent horizontal scrolling */
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-family: inherit;
-}
-
-input, select, textarea {
-  font-family: inherit;
-}
-
-/* Accessibility & Focus Rings */
-:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 3px;
-}
-
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-/* Reduced Motion Support */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
   }
 }
 
-/* Scrollbar customization */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #E8EBFF;
+    --panel: #FFFFFF;
+    --panel2: #F1F2FF;
+    --line: #1B1F4B;
+    --ink: #1B1F4B;
+    --mute: #4A5190;
+    --y-text: #8A5F00; /* High contrast >= 4.5:1 on light panels */
+    --v-text: #5B3DAE; /* High contrast >= 4.5:1 on light panels */
+    color-scheme: light;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-app);
+:root[data-theme="light"] {
+  --bg: #E8EBFF;
+  --panel: #FFFFFF;
+  --panel2: #F1F2FF;
+  --line: #1B1F4B;
+  --ink: #1B1F4B;
+  --mute: #4A5190;
+  --y-text: #8A5F00;
+  --v-text: #5B3DAE;
+  color-scheme: light;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--border-medium);
-  border-radius: var(--radius-full);
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
+/* Global Box Sizing & Typography */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 800 16px/1.5 'Nunito', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headings: Lilita One, weight 400 */
+h1, h2, h3, h4, .d {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-weight: 400;
+  letter-spacing: .01em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+h1 { font-size: clamp(30px, 4vw, 46px); }
+h2 { font-size: 26px; }
+h3 { font-size: 20px; }
+h4 { font-size: 18px; }
+
+p { margin: 0; }
+.m { color: var(--mute); font-weight: 600; }
+
+a, button {
+  font: inherit;
+  color: inherit;
+}
+
+/* Keyboard Focus Rings */
+:focus-visible {
+  outline: 3px solid var(--y);
+  outline-offset: 3px;
+}
+
+/* Shared Chunky Cards */
+.card {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 22px;
+}
+
+/* Shared Chunky Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 20px;
+  border-radius: 12px;
+  border: 3px solid var(--line);
+  box-shadow: 0 4px 0 var(--line);
+  font: 400 18px 'Lilita One', Impact, sans-serif;
+  background: var(--g);
+  color: var(--on);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--line);
+}
+
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.btn[disabled] {
+  background: var(--panel2);
+  color: var(--mute);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Chips and Badges */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: 3px solid var(--line);
+  background: var(--panel);
+  font-size: 15px;
+}
+.chip.t { color: var(--y); }
+.chip.x { color: var(--v); }
+.chip b { font: 400 19px 'Lilita One', Impact, sans-serif; }
+
+.badge {
+  font-size: 13px;
+  font-weight: 800;
+  padding: 1px 10px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+  background: var(--v);
+  color: var(--on);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Segmented progress bars */
+.bar {
+  height: 26px;
+  border-radius: 99px;
+  background: var(--bg);
+  border: 3px solid var(--line);
+  overflow: hidden;
+  position: relative;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--v) 0 22px, transparent 22px 26px);
+  transition: width 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.bar.y i {
+  background: repeating-linear-gradient(90deg, var(--y) 0 14px, transparent 14px 17px);
+}
+
+.bar.sm {
+  height: 14px;
+  border-width: 2px;
+}
+
+/* Standard SVG icon rules */
+.i {
+  width: 1.3em;
+  height: 1.3em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+  vertical-align: middle;
+}
+
+/* Responsive Tables for Admin & Reports */
+.table-container,
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 12px 0;
+  border: 3px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: 0 4px 0 var(--line);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  text-align: left;
+}
+
+th {
+  background: var(--panel2);
+  color: var(--mute);
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  padding: 12px 16px;
+  border-bottom: 3px solid var(--line);
+}
+
+td {
+  padding: 12px 16px;
+  border-bottom: 2px solid rgba(7, 9, 32, 0.4);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* Chunky Form Controls */
+input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  border-radius: 12px;
+  border: 3px solid var(--line);
+  background: var(--panel2);
+  color: var(--ink);
+  padding: 10px 14px;
+}
+
+/* Accessibility & Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }

@@ -1,0 +1,380 @@
+/* ==========================================================================
+   Prize Shop Styles (Chunky Arcade Cabinet)
+   ========================================================================== */
+
+.shop-view {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Head */
+.shop-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.shop-head h1 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: clamp(30px, 4vw, 42px);
+  margin: 0;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.shop-head p.m {
+  color: var(--mute);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 6px 0 0 0;
+}
+
+/* Wallet Banner */
+.wallet {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  background: var(--y);
+  color: var(--on);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 24px 28px;
+}
+
+.wallet-icon {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.wallet-grow {
+  flex: 1 1 200px;
+}
+
+.wallet-grow p {
+  font-size: 14px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  opacity: 0.85;
+}
+
+.wallet .d {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1;
+}
+
+.wallet-next {
+  flex: 1 1 260px;
+}
+
+.wallet-next p {
+  font-size: 14px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.wallet-bar {
+  height: 14px;
+  background: rgba(20, 23, 58, 0.25);
+  border: 2px solid var(--line);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.wallet-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: repeating-linear-gradient(90deg, var(--on) 0 14px, transparent 14px 17px);
+  transition: width 0.3s ease;
+}
+
+/* Shelf Sections */
+.sec {
+  margin: 16px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sec h2 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 26px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.sec .tag {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 2px 14px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+  color: var(--on);
+}
+
+.shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+/* Prize Card */
+.card.prize {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 0.15s ease;
+}
+
+.card.prize.can {
+  border-color: var(--g);
+  box-shadow: 0 6px 0 var(--line), 0 0 0 1px var(--g);
+}
+
+.card.prize.lock {
+  opacity: 0.92;
+}
+
+.card.prize.lock .ico {
+  filter: grayscale(0.85);
+  background: var(--panel2) !important;
+  color: var(--mute) !important;
+}
+
+.prize-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.prize .ico {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--line);
+  color: var(--on);
+  box-shadow: 0 4px 0 var(--line);
+  flex-shrink: 0;
+}
+
+.prize .ico svg {
+  width: 32px;
+  height: 32px;
+}
+
+.prize-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.prize-badge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+}
+
+.prize-badge.rank {
+  background: var(--v);
+  color: var(--on);
+}
+
+.prize-badge.cooldown {
+  background: var(--y);
+  color: var(--on);
+}
+
+.prize h3 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 22px;
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.prize-desc {
+  font-size: 14px;
+  color: var(--mute);
+  margin: 0;
+  line-height: 1.35;
+  flex: 1;
+}
+
+.price {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 26px;
+  color: var(--y);
+}
+
+.price svg {
+  width: 24px;
+  height: 24px;
+}
+
+.prize-bar {
+  height: 10px;
+  background: rgba(20, 23, 58, 0.4);
+  border: 2px solid var(--line);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.prize-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: repeating-linear-gradient(90deg, var(--y) 0 8px, transparent 8px 11px);
+}
+
+.need {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mute);
+  margin: 0;
+}
+
+/* History Box */
+.history-card {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 24px;
+  margin-top: 16px;
+}
+
+.history-card h2 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 22px;
+  margin: 0 0 16px 0;
+  color: var(--ink);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--panel2);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.history-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.history-item-name {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.history-item-time {
+  font-size: 13px;
+  color: var(--mute);
+}
+
+.history-item-cost {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 20px;
+  color: var(--r);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 9, 32, 0.85);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal-card {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 8px 0 var(--line);
+  padding: 28px;
+  max-width: 440px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-card h2 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 26px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.modal-summary {
+  background: var(--panel2);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mute);
+}
+
+.modal-row b {
+  color: var(--ink);
+}
+
+.modal-row.total {
+  border-top: 2px solid var(--line);
+  padding-top: 8px;
+  color: var(--ink);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}

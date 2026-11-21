@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
-import { ProgressBar } from '../../components/ui/ProgressBar';
-import { Skeleton } from '../../components/ui/Skeleton';
+import { ArcadeIcon } from '../../components/ui/ArcadeIcon';
 import { CooldownTimer } from '../../components/common/CooldownTimer';
 import { GainFeedback, type GainFeedbackItem } from '../../components/common/GainFeedback';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,8 +17,45 @@ import type {
   SanitizedQuizQuestion,
   ArcadeRewardResult,
 } from '../../types/arcade';
+import './Arcade.css';
 
 type GameState = 'idle' | 'playing' | 'submitting' | 'result';
+
+interface CabinetPreview {
+  id: string;
+  name: string;
+  rewardLine: string;
+  color: string;
+  icon: 'gamepad' | 'coin' | 'flame' | 'gift';
+  status: string;
+}
+
+const UPCOMING_CABINETS: CabinetPreview[] = [
+  {
+    id: 'pixel-racer',
+    name: 'Pixel Racer',
+    rewardLine: '+15 tokens · +20 EXP',
+    color: 'var(--s)',
+    icon: 'gamepad',
+    status: 'Coming soon',
+  },
+  {
+    id: 'coin-hunt',
+    name: 'Coin Hunt',
+    rewardLine: '+25 tokens · +10 EXP',
+    color: 'var(--y)',
+    icon: 'coin',
+    status: 'Coming soon',
+  },
+  {
+    id: 'boss-rush',
+    name: 'Boss Rush',
+    rewardLine: '+10 tokens · +40 EXP',
+    color: 'var(--r)',
+    icon: 'flame',
+    status: 'Coming soon',
+  },
+];
 
 export const Arcade: React.FC = () => {
   const { user, refreshUser } = useAuth();
@@ -106,7 +139,6 @@ export const Arcade: React.FC = () => {
       setRoundSecondsLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          // Auto submit when time runs out
           handleSubmitQuiz();
           return 0;
         }
@@ -164,463 +196,362 @@ export const Arcade: React.FC = () => {
   const isLastQuestion = currentIdx === questions.length - 1;
   const hasCurrentAnswer = currentQ ? answers[currentQ.id] !== undefined : false;
 
+  // Clean tier name (remove raw emojis from code for clean typography)
+  const cleanTierName = (rawName: string) =>
+    rawName.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '800px', margin: '0 auto' }}>
+    <div className="arcade-view">
       <GainFeedback items={gains} onDismiss={handleDismissGain} />
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+      <div className="arcade-head">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '1.75rem' }}>🕹️</span>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, letterSpacing: '0.05em' }}>
-              CYBER ARCADE
-            </h1>
-          </div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.25rem 0 0 0' }}>
-            Quick Quiz challenge • Earn up to {DAILY_CREDIT_CAP} Credits & EXP daily
-          </p>
+          <h1>Arcade Zone</h1>
+          <p className="arcade-sub">Pick a cabinet. Every run pays out tokens and EXP.</p>
         </div>
-
-        {gameState === 'playing' && (
-          <div
-            style={{
-              padding: '0.4rem 0.85rem',
-              borderRadius: 'var(--radius-md)',
-              background: roundSecondsLeft <= 30 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(168, 85, 247, 0.15)',
-              border: `1px solid ${roundSecondsLeft <= 30 ? 'var(--color-danger)' : 'var(--color-arcade)'}`,
-              color: roundSecondsLeft <= 30 ? 'var(--color-danger)' : 'var(--color-arcade)',
-              fontWeight: 700,
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.95rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-            }}
-          >
-            <span>⏳</span>
-            <span>
-              {Math.floor(roundSecondsLeft / 60)}:{(roundSecondsLeft % 60).toString().padStart(2, '0')}
-            </span>
-          </div>
-        )}
       </div>
 
-      {/* HUD & Daily Quota Overview */}
+      {/* State 1: IDLE / LOBBY */}
       {gameState === 'idle' && (
-        <Card>
-          {loadingStatus ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <Skeleton width="100%" height="24px" />
-              <Skeleton width="60%" height="20px" />
-            </div>
-          ) : status ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-                {/* Daily Attempts */}
-                <div style={{ background: 'var(--bg-card-subtle, rgba(255,255,255,0.03))', padding: '0.85rem', borderRadius: 'var(--radius-md)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
-                    Daily Attempts
-                  </div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 900, marginTop: '0.25rem' }}>
-                    {status.attemptsToday} / {status.maxAttemptsPerDay}
-                  </div>
-                  <ProgressBar
-                    value={status.attemptsToday}
-                    max={status.maxAttemptsPerDay}
-                    variant={status.attemptsToday >= status.maxAttemptsPerDay ? 'gold' : 'primary'}
-                    size="sm"
+        <>
+          {/* Quota & Status HUD */}
+          {status && (
+            <div className="arcade-hud">
+              {/* Daily Attempts */}
+              <div className="hud-stat">
+                <span className="hud-label">Daily attempts</span>
+                <span className="hud-val">
+                  {status.attemptsToday} / {status.maxAttemptsPerDay}
+                </span>
+                <div className="hud-bar">
+                  <div
+                    className="hud-bar-fill"
+                    style={{
+                      width: `${Math.min(100, (status.attemptsToday / status.maxAttemptsPerDay) * 100)}%`,
+                    }}
                   />
-                </div>
-
-                {/* Daily Credits Earned */}
-                <div style={{ background: 'var(--bg-card-subtle, rgba(255,255,255,0.03))', padding: '0.85rem', borderRadius: 'var(--radius-md)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
-                    Daily Credits Capped
-                  </div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 900, marginTop: '0.25rem' }}>
-                    {status.dailyCreditsEarned} / {status.dailyCreditCap} CR
-                  </div>
-                  <ProgressBar
-                    value={status.dailyCreditsEarned}
-                    max={status.dailyCreditCap}
-                    variant={status.dailyCreditsEarned >= status.dailyCreditCap ? 'success' : 'purple'}
-                    size="sm"
-                  />
-                </div>
-
-                {/* Machine Status */}
-                <div style={{ background: 'var(--bg-card-subtle, rgba(255,255,255,0.03))', padding: '0.85rem', borderRadius: 'var(--radius-md)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
-                    Machine Status
-                  </div>
-                  <div style={{ marginTop: '0.35rem' }}>
-                    {status.isRestricted ? (
-                      <Badge variant="danger">RESTRICTED</Badge>
-                    ) : status.attemptsToday >= status.maxAttemptsPerDay ? (
-                      <Badge variant="neutral">DAILY LIMIT REACHED</Badge>
-                    ) : status.secondsUntilNextAttempt > 0 ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        <Badge variant="warning">COOLING DOWN</Badge>
-                        {status.cooldownUntil && (
-                          <CooldownTimer
-                            expiresAt={status.cooldownUntil}
-                            onExpire={loadStatus}
-                            className="arcade-cooldown-text"
-                          />
-                        )}
-                      </div>
-                    ) : (
-                      <Badge variant="success">READY TO PLAY</Badge>
-                    )}
-                  </div>
                 </div>
               </div>
 
-              {/* Debt Restriction Notice */}
-              {status.isRestricted && (
-                <div
-                  style={{
-                    padding: '0.85rem',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(239, 68, 68, 0.15)',
-                    border: '1px solid var(--color-danger)',
-                    color: 'var(--color-danger)',
-                    fontSize: '0.85rem',
-                  }}
-                >
-                  ⚠️ <strong>Debt Restriction Active:</strong> {status.restrictionReason}
+              {/* Daily Tokens Capped */}
+              <div className="hud-stat">
+                <span className="hud-label">Daily tokens capped</span>
+                <span className="hud-val">
+                  {status.dailyCreditsEarned} / {status.dailyCreditCap}
+                </span>
+                <div className="hud-bar">
+                  <div
+                    className="hud-bar-fill mint"
+                    style={{
+                      width: `${Math.min(100, (status.dailyCreditsEarned / status.dailyCreditCap) * 100)}%`,
+                    }}
+                  />
                 </div>
-              )}
+              </div>
 
-              {/* Play Button */}
-              <div>
-                <Button
-                  variant="arcade"
-                  size="lg"
-                  disabled={!status.canPlay || actionLoading}
-                  onClick={handleStartGame}
-                  style={{ width: '100%', minHeight: '52px', fontSize: '1rem', fontWeight: 900 }}
-                >
-                  {actionLoading ? (
-                    'STARTING ARCADE SESSION...'
-                  ) : status.isRestricted ? (
-                    'LOCKED BY DEBT RESTRICTION'
+              {/* Machine Status */}
+              <div className="hud-stat">
+                <span className="hud-label">Machine status</span>
+                <div style={{ marginTop: '4px' }}>
+                  {status.isRestricted ? (
+                    <span className="hud-status-badge danger">Restricted</span>
                   ) : status.attemptsToday >= status.maxAttemptsPerDay ? (
-                    'DAILY LIMIT REACHED (RESETS 00:00 UTC)'
+                    <span className="hud-status-badge limit">Daily limit reached</span>
                   ) : status.secondsUntilNextAttempt > 0 ? (
-                    'MACHINE COOLING DOWN'
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span className="hud-status-badge cooldown">Cooling down</span>
+                      {status.cooldownUntil && (
+                        <CooldownTimer
+                          expiresAt={status.cooldownUntil}
+                          onExpire={loadStatus}
+                          className="arcade-cooldown-text"
+                        />
+                      )}
+                    </div>
                   ) : (
-                    '🕹️ INSERT COIN • PLAY QUICK QUIZ'
+                    <span className="hud-status-badge ready">Ready to play</span>
                   )}
-                </Button>
+                </div>
               </div>
             </div>
-          ) : null}
-        </Card>
-      )}
+          )}
 
-      {/* Rules & Rewards Tier Table (when idle) */}
-      {gameState === 'idle' && (
-        <Card title="⚡ REWARD TIERS & RULES">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
-              Test your gaming, esports, and hardware knowledge in 5 fast-paced trivia questions. High scores grant immediate Credits and rank EXP.
-            </p>
+          {/* Debt Restriction Notice */}
+          {status?.isRestricted && (
+            <div className="arcade-notes" style={{ borderColor: 'var(--r)', color: 'var(--r)' }}>
+              <strong>Debt restriction active:</strong> {status.restrictionReason}
+            </div>
+          )}
 
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+          {/* Cabinets Grid */}
+          <div className="games-grid">
+            {/* Cabinet 1: Quick Quiz (Active playable cabinet) */}
+            <div className="game-card featured">
+              <div className="game-scr" style={{ background: 'var(--y)' }}>
+                <span className="game-scr-badge">Playable</span>
+                <ArcadeIcon name="joystick" />
+              </div>
+              <div className="game-info">
+                <h3>Quick Quiz</h3>
+                <p className="game-reward">Up to +5 tokens · +15 EXP</p>
+              </div>
+              <button
+                type="button"
+                className="game-btn"
+                disabled={!status?.canPlay || actionLoading || loadingStatus}
+                onClick={handleStartGame}
+              >
+                {actionLoading ? (
+                  'Starting round...'
+                ) : status?.isRestricted ? (
+                  'Locked by debt'
+                ) : status && status.attemptsToday >= status.maxAttemptsPerDay ? (
+                  'Daily limit reached'
+                ) : status && status.secondsUntilNextAttempt > 0 ? (
+                  'Machine cooling down'
+                ) : (
+                  <>
+                    <ArcadeIcon name="joystick" size={20} />
+                    <span>Start game</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Upcoming Cabinets */}
+            {UPCOMING_CABINETS.map((cabinet) => (
+              <div key={cabinet.id} className="game-card">
+                <div className="game-scr" style={{ background: cabinet.color }}>
+                  <span
+                    className="game-scr-badge"
+                    style={{ background: 'var(--panel)', color: 'var(--mute)' }}
+                  >
+                    {cabinet.status}
+                  </span>
+                  <ArcadeIcon name={cabinet.icon} />
+                </div>
+                <div className="game-info">
+                  <h3>{cabinet.name}</h3>
+                  <p className="game-reward">{cabinet.rewardLine}</p>
+                </div>
+                <button type="button" className="game-btn" disabled>
+                  <span>Locked</span>
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick Quiz Reward Tiers & Rules */}
+          <div className="arcade-tiers-card">
+            <h2>Quick Quiz reward tiers</h2>
+            <div className="tiers-table-wrapper">
+              <table className="tiers-table">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', textAlign: 'left' }}>
-                    <th style={{ padding: '0.5rem 0.25rem' }}>Tier</th>
-                    <th style={{ padding: '0.5rem 0.25rem' }}>Score</th>
-                    <th style={{ padding: '0.5rem 0.25rem' }}>Credits</th>
-                    <th style={{ padding: '0.5rem 0.25rem' }}>EXP</th>
+                  <tr>
+                    <th>Tier</th>
+                    <th>Score</th>
+                    <th>Tokens</th>
+                    <th>EXP</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Object.values(ARCADE_TIERS).map((tier) => (
-                    <tr key={tier.name} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '0.6rem 0.25rem', fontWeight: 700 }}>{tier.name}</td>
-                      <td style={{ padding: '0.6rem 0.25rem' }}>
-                        {tier.minScore === 5 ? '5 / 5' : tier.minScore > 0 ? `${tier.minScore} / 5` : '0–1 / 5'}
+                    <tr key={tier.name}>
+                      <td>{cleanTierName(tier.name)}</td>
+                      <td>
+                        {tier.minScore === 5
+                          ? '5 of 5'
+                          : tier.minScore > 0
+                          ? `${tier.minScore} of 5`
+                          : '0–1 of 5'}
                       </td>
-                      <td style={{ padding: '0.6rem 0.25rem', color: 'var(--color-primary)', fontWeight: 800 }}>
-                        +{tier.credits} CR
-                      </td>
-                      <td style={{ padding: '0.6rem 0.25rem', color: 'var(--color-arcade)', fontWeight: 800 }}>
-                        +{tier.exp} EXP
-                      </td>
+                      <td className="reward-tokens">+{tier.credits} tokens</td>
+                      <td className="reward-exp">+{tier.exp} EXP</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              <div>• <strong>Fair Play:</strong> Max {MAX_ATTEMPTS_PER_DAY} attempts per calendar day with a 15-minute cooldown between plays.</div>
-              <div>• <strong>Economy Safe:</strong> Maximum {DAILY_CREDIT_CAP} Credits can be earned per day from the arcade. EXP is never capped.</div>
-              <div>• <strong>Anti-Cheat:</strong> Questions are generated server-side. Answers are validated through single-use atomic transactions.</div>
+            <div className="arcade-notes">
+              <div>• <strong>Fair play:</strong> Maximum {MAX_ATTEMPTS_PER_DAY} attempts per day with a 15-minute cooldown between plays.</div>
+              <div>• <strong>Economy safe:</strong> Maximum {DAILY_CREDIT_CAP} tokens can be earned per day from the arcade. EXP is never capped.</div>
+              <div>• <strong>Anti-cheat:</strong> Questions are generated server-side. Answers are validated through single-use atomic transactions.</div>
             </div>
           </div>
-        </Card>
+        </>
       )}
 
-      {/* Active Game View */}
+      {/* State 2: PLAYING ACTIVE QUIZ */}
       {gameState === 'playing' && currentQ && (
-        <Card>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Round Progress */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-arcade)', textTransform: 'uppercase' }}>
-                  Question {currentIdx + 1} of {questions.length}
-                </span>
-                <Badge variant="secondary">{currentQ.category}</Badge>
-              </div>
-              <ProgressBar
-                value={currentIdx + 1}
-                max={questions.length}
-                variant="purple"
-                size="sm"
-              />
-            </div>
-
-            {/* Question Text */}
-            <div
-              style={{
-                fontSize: '1.15rem',
-                fontWeight: 700,
-                lineHeight: 1.45,
-                padding: '0.5rem 0',
-                minHeight: '60px',
-              }}
-            >
-              {currentQ.question}
-            </div>
-
-            {/* Options List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              {currentQ.options.map((option, optIdx) => {
-                const isSelected = answers[currentQ.id] === optIdx;
-                return (
-                  <button
-                    key={optIdx}
-                    type="button"
-                    onClick={() => handleSelectOption(optIdx)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '0.85rem 1rem',
-                      borderRadius: 'var(--radius-md)',
-                      background: isSelected ? 'rgba(168, 85, 247, 0.2)' : 'var(--bg-card-subtle, rgba(255,255,255,0.03))',
-                      border: isSelected
-                        ? '2px solid var(--color-arcade)'
-                        : '1px solid var(--border-color, rgba(255,255,255,0.1))',
-                      color: isSelected ? '#ffffff' : 'var(--text-color)',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontSize: '0.95rem',
-                      fontWeight: isSelected ? 700 : 500,
-                      transition: 'all 0.15s ease',
-                      minHeight: '48px',
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: isSelected ? 'var(--color-arcade)' : 'rgba(255,255,255,0.1)',
-                        color: isSelected ? '#000000' : 'var(--text-muted)',
-                        fontWeight: 900,
-                        fontSize: '0.8rem',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {String.fromCharCode(65 + optIdx)}
-                    </span>
-                    <span style={{ flex: 1 }}>{option}</span>
-                    {isSelected && <span>✓</span>}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Navigation Buttons */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', marginTop: '0.5rem' }}>
-              <Button
-                variant="secondary"
-                disabled={currentIdx === 0}
-                onClick={() => setCurrentIdx((p) => Math.max(0, p - 1))}
-              >
-                ← Previous
-              </Button>
-
-              {isLastQuestion ? (
-                <Button
-                  variant="arcade"
-                  disabled={answeredCount < questions.length}
-                  onClick={handleSubmitQuiz}
-                  style={{ minWidth: '150px', fontWeight: 800 }}
-                >
-                  Submit Quiz ({answeredCount}/{questions.length})
-                </Button>
-              ) : (
-                <Button
-                  variant="primary"
-                  disabled={!hasCurrentAnswer}
-                  onClick={() => setCurrentIdx((p) => Math.min(questions.length - 1, p + 1))}
-                  style={{ minWidth: '120px' }}
-                >
-                  Next Question →
-                </Button>
-              )}
+        <div className="quiz-cabinet">
+          {/* Top Bar with Step & Timer */}
+          <div className="quiz-top">
+            <span className="quiz-step">
+              Question {currentIdx + 1} of {questions.length}
+            </span>
+            <div className={`quiz-timer-chip ${roundSecondsLeft <= 30 ? 'urgent' : ''}`}>
+              <ArcadeIcon name="clock" size={18} />
+              <span>
+                {Math.floor(roundSecondsLeft / 60)}:{(roundSecondsLeft % 60).toString().padStart(2, '0')}
+              </span>
             </div>
           </div>
-        </Card>
+
+          {/* Segmented Step Progress Bar */}
+          <div className="hud-bar">
+            <div
+              className="hud-bar-fill"
+              style={{ width: `${((currentIdx + 1) / questions.length) * 100}%` }}
+            />
+          </div>
+
+          {/* Question Box */}
+          <div className="quiz-question-box">
+            {currentQ.question}
+          </div>
+
+          {/* 4 Chunky Option Buttons */}
+          <div className="quiz-options">
+            {currentQ.options.map((option, optIdx) => {
+              const isSelected = answers[currentQ.id] === optIdx;
+              return (
+                <button
+                  key={optIdx}
+                  type="button"
+                  className={`quiz-opt-btn ${isSelected ? 'selected' : ''}`}
+                  onClick={() => handleSelectOption(optIdx)}
+                >
+                  <span className="quiz-opt-letter">{String.fromCharCode(65 + optIdx)}</span>
+                  <span style={{ flex: 1 }}>{option}</span>
+                  {isSelected && <ArcadeIcon name="check" size={20} />}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Navigation Controls */}
+          <div className="quiz-nav">
+            <button
+              type="button"
+              className="game-btn"
+              style={{ background: 'var(--panel2)', color: 'var(--ink)', width: 'auto' }}
+              disabled={currentIdx === 0}
+              onClick={() => setCurrentIdx((p) => Math.max(0, p - 1))}
+            >
+              Previous
+            </button>
+
+            {isLastQuestion ? (
+              <button
+                type="button"
+                className="game-btn"
+                disabled={answeredCount < questions.length}
+                onClick={handleSubmitQuiz}
+                style={{ width: 'auto' }}
+              >
+                Submit quiz ({answeredCount}/{questions.length})
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="game-btn"
+                disabled={!hasCurrentAnswer}
+                onClick={() => setCurrentIdx((p) => Math.min(questions.length - 1, p + 1))}
+                style={{ width: 'auto' }}
+              >
+                Next question
+              </button>
+            )}
+          </div>
+        </div>
       )}
 
-      {/* Submitting Animation State */}
+      {/* State 3: SUBMITTING / VALIDATING */}
       {gameState === 'submitting' && (
-        <Card>
-          <div style={{ textAlign: 'center', padding: '3rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '3rem', animation: 'spin 1.5s linear infinite' }}>🕹️</span>
-            <div style={{ fontSize: '1.25rem', fontWeight: 900, letterSpacing: '0.05em' }}>
-              VALIDATING ARCADE RESULTS
-            </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', maxWidth: '400px', margin: 0 }}>
-              The server is grading your answers, checking daily caps, and depositing your rewards...
-            </p>
+        <div className="quiz-cabinet" style={{ textAlign: 'center', padding: '48px 24px', alignItems: 'center' }}>
+          <div style={{ color: 'var(--y)', animation: 'pulse 1s infinite alternate' }}>
+            <ArcadeIcon name="joystick" size={64} />
           </div>
-        </Card>
+          <h2 style={{ fontFamily: 'Lilita One', fontSize: '28px', margin: '16px 0 8px 0' }}>
+            Validating arcade results
+          </h2>
+          <p className="arcade-sub" style={{ maxWidth: '420px', margin: 0 }}>
+            The server is grading your answers, checking daily caps, and depositing your rewards...
+          </p>
+        </div>
       )}
 
-      {/* Result & Victory View */}
+      {/* State 4: RESULT / CELEBRATION */}
       {gameState === 'result' && result && (
-        <Card variant="interactive">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* Victory Header */}
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '1.5rem 1rem',
-                borderRadius: 'var(--radius-lg)',
-                background: 'linear-gradient(180deg, rgba(168, 85, 247, 0.15) 0%, rgba(0, 0, 0, 0.4) 100%)',
-                border: '1px solid rgba(168, 85, 247, 0.3)',
-              }}
-            >
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
-                {result.score >= 4 ? '🏆' : result.score >= 2 ? '🎮' : '🔰'}
-              </div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 900, margin: '0 0 0.25rem 0', color: 'var(--color-arcade)' }}>
-                {result.tier}
-              </h2>
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-color)' }}>
-                Score: {result.score} / {result.totalQuestions} Correct ({Math.round((result.score / result.totalQuestions) * 100)}%)
-              </div>
-
-              {/* Reward Gains Summary */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-                <div
-                  style={{
-                    padding: '0.6rem 1.25rem',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(0, 255, 204, 0.15)',
-                    border: '1px solid var(--color-primary)',
-                    fontWeight: 900,
-                    color: 'var(--color-primary)',
-                    fontSize: '1.05rem',
-                  }}
-                >
-                  +{result.creditsAwarded} CREDITS
-                </div>
-                <div
-                  style={{
-                    padding: '0.6rem 1.25rem',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(168, 85, 247, 0.15)',
-                    border: '1px solid var(--color-arcade)',
-                    fontWeight: 900,
-                    color: 'var(--color-arcade)',
-                    fontSize: '1.05rem',
-                  }}
-                >
-                  +{result.expAwarded} EXP
-                </div>
-              </div>
-
-              {result.isClamped && (
-                <div
-                  style={{
-                    marginTop: '0.85rem',
-                    fontSize: '0.8rem',
-                    color: 'var(--color-warning)',
-                    background: 'rgba(234, 179, 8, 0.1)',
-                    padding: '0.4rem 0.85rem',
-                    borderRadius: 'var(--radius-sm)',
-                    display: 'inline-block',
-                  }}
-                >
-                  ⚡ Daily credit cap reached ({DAILY_CREDIT_CAP} CR max/day). Full EXP was awarded!
-                </div>
-              )}
+        <div className="quiz-result-card">
+          <div className="result-banner">
+            <ArcadeIcon name={result.score >= 4 ? 'trophy' : 'gamepad'} size={64} />
+            <h2 className="result-tier-title">{cleanTierName(result.tier)}</h2>
+            <div className="result-score-line">
+              Score: {result.score} of {result.totalQuestions} correct (
+              {Math.round((result.score / result.totalQuestions) * 100)}%)
             </div>
 
-            {/* Answer Review Section */}
-            <div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.75rem' }}>
-                QUESTION REVIEW & EXPLANATIONS
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {result.review.map((item, idx) => (
-                  <div
-                    key={item.questionId}
-                    style={{
-                      padding: '0.85rem',
-                      borderRadius: 'var(--radius-md)',
-                      background: item.isCorrect ? 'rgba(34, 197, 94, 0.08)' : 'rgba(239, 68, 68, 0.08)',
-                      borderLeft: `4px solid ${item.isCorrect ? 'var(--color-success)' : 'var(--color-danger)'}`,
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.4rem' }}>
-                      {idx + 1}. {item.question}
-                    </div>
-                    <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                      <div style={{ color: item.isCorrect ? 'var(--color-success)' : 'var(--color-danger)', fontWeight: 600 }}>
-                        Your Answer: {item.chosenOption} {item.isCorrect ? '✓' : '✗'}
-                      </div>
-                      {!item.isCorrect && (
-                        <div style={{ color: 'var(--color-success)', fontWeight: 600 }}>
-                          Correct Answer: {item.correctOption}
-                        </div>
-                      )}
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-                        💡 {item.explanation}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="result-rewards-row">
+              <span className="reward-pill tokens">
+                +{result.creditsAwarded} tokens
+              </span>
+              <span className="reward-pill exp">
+                +{result.expAwarded} EXP
+              </span>
             </div>
 
-            {/* Action Buttons */}
-            <div>
-              <Button
-                variant="arcade"
-                size="lg"
-                onClick={handleBackToLobby}
-                style={{ width: '100%', minHeight: '48px', fontWeight: 800 }}
+            {result.isClamped && (
+              <div
+                className="arcade-notes"
+                style={{ marginTop: '12px', background: 'rgba(255, 201, 60, 0.1)', borderColor: 'var(--y)', color: 'var(--y)' }}
               >
-                RETURN TO ARCADE HALL
-              </Button>
+                Daily token cap reached ({DAILY_CREDIT_CAP} tokens max/day). Full EXP was awarded!
+              </div>
+            )}
+          </div>
+
+          {/* Question Review Section */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ fontFamily: 'Lilita One', fontSize: '20px', margin: 0 }}>
+              Question review & explanations
+            </h3>
+            <div className="review-list">
+              {result.review.map((item, idx) => (
+                <div
+                  key={item.questionId}
+                  className={`review-item ${item.isCorrect ? 'correct' : 'incorrect'}`}
+                >
+                  <div className="review-q">
+                    {idx + 1}. {item.question}
+                  </div>
+                  <div className={`review-ans ${item.isCorrect ? 'good' : 'bad'}`}>
+                    Your answer: {item.chosenOption} {item.isCorrect ? '(Correct)' : '(Incorrect)'}
+                  </div>
+                  {!item.isCorrect && (
+                    <div className="review-ans good">
+                      Correct answer: {item.correctOption}
+                    </div>
+                  )}
+                  <div className="review-exp">
+                    {item.explanation}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </Card>
+
+          <button
+            type="button"
+            className="game-btn"
+            onClick={handleBackToLobby}
+            style={{ marginTop: '12px' }}
+          >
+            Return to Arcade Zone
+          </button>
+        </div>
       )}
     </div>
   );

@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { EmptyState } from '../../components/ui/EmptyState';
-import { RankBadge } from '../../components/ui/RankBadge';
+import { ArcadeIcon } from '../../components/ui/ArcadeIcon';
 import { useConfig } from '../../hooks/useConfig';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -11,6 +7,7 @@ import {
   calculateLeaderboardCycle,
   type LeaderboardEntry,
 } from '../../services/leaderboardService';
+import './Leaderboard.css';
 
 export const Leaderboard: React.FC = () => {
   const { config } = useConfig();
@@ -66,277 +63,216 @@ export const Leaderboard: React.FC = () => {
   }, [user]);
 
   // Top 3 Podium
-  const topThree = entries.slice(0, 3);
-  const restEntries = entries.slice(3);
+  const firstPlace = entries[0];
+  const secondPlace = entries[1];
+  const thirdPlace = entries[2];
+
+  // Rest of entries (rank 4+) excluding current player if already pinned in list
+  const listEntries = useMemo(() => {
+    return entries.slice(3).filter((e) => !e.isCurrentUser);
+  }, [entries]);
+
+  // Motivation Chase Banner Calculations
+  const chaseBanner = useMemo(() => {
+    if (!userStanding) {
+      return {
+        title: 'Climb the Champions board.',
+        subtitle: 'Play PC sessions and quick quiz games to earn EXP.',
+        progressPct: 0,
+      };
+    }
+
+    const myRank = userStanding.rankPosition;
+    const myExp = userStanding.exp;
+
+    if (myRank === 1) {
+      const runnerUp = entries[1];
+      const gap = runnerUp ? myExp - runnerUp.exp : 0;
+      return {
+        title: "You're #1. Defend your spot at the top.",
+        subtitle: runnerUp
+          ? `You lead #${runnerUp.username} by ${gap.toLocaleString()} EXP.`
+          : 'Undisputed champion of Time2Earn.',
+        progressPct: 100,
+      };
+    }
+
+    if (myRank === 2) {
+      const leader = entries[0];
+      const gap = leader ? leader.exp - myExp : 0;
+      const pct = leader ? Math.min(100, Math.round((myExp / leader.exp) * 100)) : 80;
+      return {
+        title: `You're #2. Beat ${leader?.username || 'the champion'} for 1st place.`,
+        subtitle: `Earn ${gap.toLocaleString()} more EXP and you take 1st place.`,
+        progressPct: pct,
+      };
+    }
+
+    if (myRank === 3) {
+      const second = entries[1];
+      const gap = second ? second.exp - myExp : 0;
+      const pct = second ? Math.min(100, Math.round((myExp / second.exp) * 100)) : 80;
+      return {
+        title: `You're #3. Beat ${second?.username || '2nd place'} for 2nd place.`,
+        subtitle: `Earn ${gap.toLocaleString()} more EXP and you take 2nd place.`,
+        progressPct: pct,
+      };
+    }
+
+    // Rank 4 or lower: Target is #3 to reach podium
+    const target = entries[2];
+    const gap = target ? Math.max(1, target.exp - myExp) : 100;
+    const pct = target ? Math.min(100, Math.max(5, Math.round((myExp / target.exp) * 100))) : 50;
+    return {
+      title: `You're #${myRank}. Beat ${target?.username || 'the podium'} to reach the podium.`,
+      subtitle: `Earn ${gap.toLocaleString()} more EXP and you take 3rd place.`,
+      progressPct: pct,
+    };
+  }, [userStanding, entries]);
+
+  // Current player's gap text
+  const myGapText = useMemo(() => {
+    if (!userStanding) return '';
+    if (userStanding.rankPosition === 1) {
+      const runnerUp = entries[1];
+      return runnerUp ? `+${(userStanding.exp - runnerUp.exp).toLocaleString()} lead` : 'Leader';
+    }
+    const targetIdx = userStanding.rankPosition - 2;
+    const target = entries[targetIdx];
+    if (target) {
+      const diff = target.exp - userStanding.exp;
+      return `${diff.toLocaleString()} to #${target.rankPosition}`;
+    }
+    return '';
+  }, [userStanding, entries]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
-      {/* 1. Header & Live Cycle Countdown Banner */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '1rem',
-        }}
-      >
+    <div className="rankings-view">
+      {/* 1. Header & Live Countdown */}
+      <div className="rankings-head">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0, letterSpacing: '0.02em' }}>
-              CHAMPIONS LEADERBOARD
-            </h1>
-            <Badge variant="gold" size="sm">
-              🏆 SEASONAL
-            </Badge>
-          </div>
-          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Top gamers ranked by lifetime EXP. Tournaments cycle every {config.leaderboardResetDays} days.
+          <h1>Champions board</h1>
+          <p className="rankings-sub">
+            Ranked by EXP. {totalParticipants || entries.length} players are in this round.
           </p>
         </div>
-
-        {/* Live Cycle Pill */}
-        <div
-          style={{
-            background: 'rgba(255, 183, 3, 0.1)',
-            border: '1px solid rgba(255, 183, 3, 0.35)',
-            borderRadius: 'var(--radius-md)',
-            padding: '0.5rem 0.85rem',
-            textAlign: 'right',
-          }}
-        >
-          <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--accent-gold)', textTransform: 'uppercase' }}>
-            RESET WINDOW ({config.leaderboardResetDays} DAYS)
-          </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1rem', fontWeight: 900, color: 'var(--accent-gold)' }}>
-            ⏳ {cycleInfo.formattedCountdown}
-          </div>
+        <div className="timer">
+          <ArcadeIcon name="clock" />
+          <span className="m">Round ends in</span>
+          <b>{cycleInfo.formattedCountdown}</b>
         </div>
       </div>
 
-      {/* 2. Current Player Highlight Card */}
-      {user && userStanding && (
-        <Card
-          variant="neon"
-          style={{
-            borderLeft: '4px solid var(--primary)',
-            background: 'linear-gradient(90deg, rgba(0, 229, 255, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%)',
-          }}
+      {/* 2. Motivation Chase Banner (Red) */}
+      <div className="card chase">
+        <div className="d">{chaseBanner.title}</div>
+        <p>{chaseBanner.subtitle}</p>
+        <div
+          className="bar"
+          role="progressbar"
+          aria-valuenow={chaseBanner.progressPct}
+          aria-valuemin={0}
+          aria-valuemax={100}
         >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '0.75rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div
-                style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '50%',
-                  background: 'var(--primary-dim)',
-                  border: '1px solid var(--primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 900,
-                  fontSize: '1.1rem',
-                  color: 'var(--primary)',
-                  fontFamily: 'var(--font-mono)',
-                }}
-              >
-                #{userStanding.rankPosition}
+          <i style={{ width: `${chaseBanner.progressPct}%` }} />
+        </div>
+      </div>
+
+      {/* 3. Two Columns: Left Podium, Right List */}
+      <div className="rk">
+        {/* LEFT COLUMN: Top 3 Podium */}
+        <div className="pod">
+          {/* 1st Place Champion */}
+          <div className="card p1">
+            <ArcadeIcon name="crown" />
+            <p>1st place</p>
+            <div className="d">{firstPlace ? firstPlace.username : 'Empty'}</div>
+            <div className="pt">
+              {firstPlace ? `${firstPlace.exp.toLocaleString()} EXP` : '0 EXP'}
+            </div>
+          </div>
+
+          {/* 2nd and 3rd Runner-Ups */}
+          <div className="pair">
+            <div className="card pc">
+              <div className="n" style={{ background: '#D5DAF5' }}>
+                2
               </div>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontWeight: 900, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
-                    {userStanding.username}
-                  </span>
-                  <Badge variant="primary" size="sm">YOU</Badge>
-                  <RankBadge rank={userStanding.rank} size="sm" />
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  Total Participants: {totalParticipants} players
-                </div>
+              <div className="d">{secondPlace ? secondPlace.username : 'Empty'}</div>
+              <div className="pt">
+                {secondPlace ? `${secondPlace.exp.toLocaleString()} EXP` : '0 EXP'}
               </div>
             </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--secondary)', fontFamily: 'var(--font-mono)' }}>
-                ⭐ {userStanding.exp.toLocaleString()} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>EXP</span>
+            <div className="card pc">
+              <div className="n" style={{ background: '#F0A15E' }}>
+                3
               </div>
-              {userStanding.rankPosition > 1 && (
-                <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>
-                  {(() => {
-                    const prevEntry = entries[userStanding.rankPosition - 2];
-                    if (prevEntry) {
-                      const gap = prevEntry.exp - userStanding.exp;
-                      return `⚡ Only ${gap.toLocaleString()} EXP to overtake #${prevEntry.rankPosition} ${prevEntry.username}`;
-                    }
-                    return '⚡ Keep grinding to climb!';
-                  })()}
+              <div className="d">{thirdPlace ? thirdPlace.username : 'Empty'}</div>
+              <div className="pt">
+                {thirdPlace ? `${thirdPlace.exp.toLocaleString()} EXP` : '0 EXP'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Player List */}
+        <div className="list">
+          {loading ? (
+            [1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="pl"
+                style={{ opacity: 0.5, minHeight: '52px' }}
+              />
+            ))
+          ) : (
+            <>
+              {/* Player's Own Highlighted Row is FIRST */}
+              {userStanding && (
+                <div className="pl me">
+                  <span className="rn">{userStanding.rankPosition}</span>
+                  <div className="pl-user-col">
+                    <span className="pl-username">{userStanding.username}</span>
+                    <span
+                      className="pl-badge"
+                      style={{ background: 'var(--on)', color: 'var(--s)' }}
+                    >
+                      You
+                    </span>
+                  </div>
+                  <span className="pt">{userStanding.exp.toLocaleString()} EXP</span>
+                  <span className="gap">{myGapText}</span>
                 </div>
               )}
-            </div>
-          </div>
-        </Card>
-      )}
 
-      {/* 3. Top 3 Podium Showcase */}
-      {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} variant="default">
-              <Skeleton height="140px" />
-            </Card>
-          ))}
-        </div>
-      ) : topThree.length > 0 && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '1rem',
-            alignItems: 'stretch',
-          }}
-        >
-          {topThree.map((player) => {
-            const isFirst = player.rankPosition === 1;
-            const isSecond = player.rankPosition === 2;
-
-            const crownIcon = isFirst ? '👑' : isSecond ? '🥈' : '🥉';
-            const podiumTitle = isFirst ? '1ST CHAMPION' : isSecond ? '2ND RUNNER-UP' : '3RD PLACE';
-            const borderColor = isFirst
-              ? 'var(--accent-gold)'
-              : isSecond
-              ? 'rgba(148, 163, 184, 0.6)'
-              : 'rgba(217, 119, 6, 0.6)';
-
-            return (
-              <Card
-                key={player.username}
-                variant={isFirst ? 'gold' : 'default'}
-                style={{
-                  border: `2px solid ${borderColor}`,
-                  background: isFirst
-                    ? 'linear-gradient(180deg, rgba(255, 183, 3, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%)'
-                    : 'var(--surface-sunken)',
-                  textAlign: 'center',
-                  padding: '1.25rem',
-                  position: 'relative',
-                  boxShadow: isFirst ? '0 0 20px rgba(255, 183, 3, 0.2)' : 'none',
-                }}
-              >
-                <div style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>{crownIcon}</div>
-                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: isFirst ? 'var(--accent-gold)' : 'var(--text-muted)', letterSpacing: '0.05em' }}>
-                  {podiumTitle}
-                </div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0.35rem 0' }}>
-                  {player.username}
-                  {player.isCurrentUser && <span style={{ color: 'var(--primary)', fontSize: '0.75rem', marginLeft: '0.35rem' }}>(You)</span>}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
-                  <RankBadge rank={player.rank} size="sm" />
-                </div>
-                <div style={{ fontSize: '1.35rem', fontWeight: 900, color: isFirst ? 'var(--accent-gold)' : 'var(--secondary)', fontFamily: 'var(--font-mono)', marginTop: '0.5rem' }}>
-                  ⭐ {player.exp.toLocaleString()} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>EXP</span>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* 4. Ranks 4 to 20 Leaderboard Table */}
-      <Card
-        variant="default"
-        header={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>TOP 20 LEADERBOARD STANDINGS</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              Showing {entries.length} contenders
-            </span>
-          </div>
-        }
-      >
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} height="44px" />
-            ))}
-          </div>
-        ) : entries.length === 0 ? (
-          <EmptyState
-            icon={<span>🏆</span>}
-            title="NO LEADERBOARD DATA"
-            description="No players recorded on the leaderboard yet. Start gaming to claim the #1 spot!"
-          />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            {restEntries.map((player) => (
-              <div
-                key={player.username}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--radius-sm)',
-                  background: player.isCurrentUser ? 'rgba(0, 229, 255, 0.08)' : 'var(--bg-elevated)',
-                  border: player.isCurrentUser ? '1px solid var(--primary)' : '1px solid var(--border-subtle)',
-                  transition: 'transform 0.15s ease',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: 900,
-                      color: player.isCurrentUser ? 'var(--primary)' : 'var(--text-muted)',
-                      width: '32px',
-                      fontSize: '0.9rem',
-                    }}
-                  >
-                    #{player.rankPosition}
-                  </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 800, color: player.isCurrentUser ? 'var(--primary)' : 'var(--text-primary)' }}>
-                      {player.username}
+              {/* Ranks 4+ List */}
+              {listEntries.map((player) => {
+                const leadDiff = userStanding ? userStanding.exp - player.exp : 0;
+                return (
+                  <div key={player.username} className="pl">
+                    <span className="rn">{player.rankPosition}</span>
+                    <div className="pl-user-col">
+                      <span className="pl-username">{player.username}</span>
+                      <span className="pl-badge">{player.rank}</span>
+                    </div>
+                    <span className="pt">{player.exp.toLocaleString()} EXP</span>
+                    <span className="gap">
+                      {leadDiff > 0 ? `You lead by ${leadDiff.toLocaleString()}` : ''}
                     </span>
-                    {player.isCurrentUser && <Badge variant="primary" size="sm">YOU</Badge>}
-                    <RankBadge rank={player.rank} size="sm" />
                   </div>
-                </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      </div>
 
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.95rem', color: 'var(--secondary)' }}>
-                    ⭐ {player.exp.toLocaleString()} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>EXP</span>
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      {/* 5. Privacy Notice */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          fontSize: '0.75rem',
-          color: 'var(--text-muted)',
-          padding: '0 0.5rem',
-        }}
-      >
-        <span>🔒</span>
+      {/* Privacy Notice */}
+      <div className="privacy-note">
+        <ArcadeIcon name="lock" size={18} />
         <span>
-          <strong>Public-Safe Standings:</strong> Only username, rank badge, and lifetime EXP score are public. Private credit balances, passwords, debts, and transaction histories are never exposed.
+          Public-safe standings: Only username, rank badge, and lifetime EXP score are public. Private balances, debts, and transaction histories are never exposed.
         </span>
       </div>
     </div>

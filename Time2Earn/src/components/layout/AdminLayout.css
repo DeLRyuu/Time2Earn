@@ -1,12 +1,7 @@
+/* Admin Layout Shell */
 .admin-shell {
-  display: flex;
   min-height: 100vh;
-  width: 100%;
-  background: #06090e;
-}
-
-.admin-content {
-  flex: 1;
-  padding: 1.5rem 0;
-  padding-bottom: 3rem;
+  background: var(--bg);
+  color: var(--ink);
+  position: relative;
 }

@@ -1,11 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
-import { RankBadge } from '../../components/ui/RankBadge';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { EmptyState } from '../../components/ui/EmptyState';
-import { Modal } from '../../components/ui/Modal';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { ArcadeIcon, type ArcadeIconName } from '../../components/ui/ArcadeIcon';
 import { CooldownTimer } from '../../components/common/CooldownTimer';
 import { useAuth } from '../../hooks/useAuth';
 import { useConfig } from '../../hooks/useConfig';
@@ -19,20 +13,13 @@ import {
 import { evaluateRewardEligibility } from '../../lib/rewards';
 import type { RewardItem } from '../../types/rewards';
 import type { RewardCooldown, RedemptionRequest } from '../../types/redemption';
-
-const CATEGORY_TABS = [
-  { id: 'ALL', label: 'All Rewards', filter: 'ALL' },
-  { id: 'PLAY-TIME', label: 'Play Time', filter: 'PLAY-TIME' },
-  { id: 'SNACK-PACK', label: 'Snacks', filter: 'SNACK-PACK' },
-  { id: 'GAME TOP-UP', label: 'Game Top-Up', filter: 'GAME TOP-UP' },
-];
+import './Rewards.css';
 
 export const Rewards: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { config } = useConfig();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState('ALL');
   const [rewards, setRewards] = useState<RewardItem[]>([]);
   const [cooldowns, setCooldowns] = useState<RewardCooldown[]>([]);
   const [playerRedemptions, setPlayerRedemptions] = useState<RedemptionRequest[]>([]);
@@ -43,17 +30,19 @@ export const Rewards: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fallback demo user
-  const currentUser = user || {
-    uid: 'player_test_uid',
-    username: 'lois_123xx',
-    role: 'user' as const,
-    credits: 332,
-    exp: 1251,
-    rank: 'Gamer',
-    streak: 3,
-    isBanned: false,
-    isRestricted: false,
-  };
+  const currentUser = useMemo(() => {
+    return user || {
+      uid: 'player_test_uid',
+      username: 'lois_123xx',
+      role: 'user' as const,
+      credits: 332,
+      exp: 1251,
+      rank: 'Gamer',
+      streak: 3,
+      isBanned: false,
+      isRestricted: false,
+    };
+  }, [user]);
 
   const loadShopData = useCallback(async () => {
     setLoading(true);
@@ -99,11 +88,71 @@ export const Rewards: React.FC = () => {
     };
   }, [currentUser.uid]);
 
-  // Filter rewards by category tab
-  const filteredRewards = rewards.filter((r) => {
-    if (activeTab === 'ALL') return true;
-    return r.category.toUpperCase() === activeTab;
-  });
+  // Sort rewards ascending by price
+  const sortedRewards = useMemo(() => {
+    return [...rewards].sort((a, b) => a.creditCost - b.creditCost);
+  }, [rewards]);
+
+  // Split into "Ready to claim" and "Almost yours"
+  const { readyPrizes, almostPrizes } = useMemo(() => {
+    const ready: Array<{ reward: RewardItem; eligibility: ReturnType<typeof evaluateRewardEligibility> }> = [];
+    const almost: Array<{ reward: RewardItem; eligibility: ReturnType<typeof evaluateRewardEligibility> }> = [];
+
+    for (const reward of sortedRewards) {
+      const hasPending = playerRedemptions.some(
+        (r) => r.rewardId === reward.id && r.status === 'pending'
+      );
+      const eligibility = evaluateRewardEligibility(
+        reward,
+        currentUser,
+        config,
+        cooldowns,
+        hasPending
+      );
+
+      // In "Ready to claim" if player can afford it and meets rank criteria (even if temporarily cooling down)
+      const canAfford = currentUser.credits >= reward.creditCost;
+      const rankMet = eligibility.state !== 'locked_rank';
+
+      if (canAfford && rankMet) {
+        ready.push({ reward, eligibility });
+      } else {
+        almost.push({ reward, eligibility });
+      }
+    }
+
+    return { readyPrizes: ready, almostPrizes: almost };
+  }, [sortedRewards, playerRedemptions, currentUser, config, cooldowns]);
+
+  // Next locked prize calculation
+  const nextLocked = almostPrizes[0]?.reward;
+  const tokensToGo = nextLocked ? Math.max(0, nextLocked.creditCost - currentUser.credits) : 0;
+  const nextPercent = nextLocked
+    ? Math.min(100, Math.max(0, Math.round((currentUser.credits / nextLocked.creditCost) * 100)))
+    : 100;
+
+  // Icon mapping
+  const getPrizeIcon = (reward: RewardItem): { icon: ArcadeIconName; color: string } => {
+    const cat = (reward.category || '').toUpperCase();
+    const name = reward.name.toLowerCase();
+
+    if (cat === 'PLAY-TIME' || name.includes('hour') || name.includes('session') || name.includes('pass')) {
+      return { icon: 'clock', color: 'var(--s)' };
+    }
+    if (name.includes('drink') || name.includes('water') || name.includes('coffee') || name.includes('soda')) {
+      return { icon: 'trophy', color: 'var(--g)' };
+    }
+    if (name.includes('vip') || name.includes('crown') || name.includes('elite')) {
+      return { icon: 'crown', color: 'var(--v)' };
+    }
+    if (name.includes('snack') || name.includes('combo') || name.includes('chips') || cat === 'SNACK-PACK') {
+      return { icon: 'gift', color: 'var(--y)' };
+    }
+    if (name.includes('mystery') || name.includes('box')) {
+      return { icon: 'gift', color: 'var(--r)' };
+    }
+    return { icon: 'bolt', color: 'var(--y)' };
+  };
 
   const handleOpenRedeemModal = (reward: RewardItem) => {
     setSelectedReward(reward);
@@ -126,8 +175,9 @@ export const Rewards: React.FC = () => {
         hasPending
       );
 
-      showToast(`Redemption request submitted for ${selectedReward.name}! Awaiting staff approval.`, 'success');
+      showToast(`Claimed: ${selectedReward.name}. Show this at the counter.`, 'success');
       setSelectedReward(null);
+      if (refreshUser) await refreshUser();
       await loadShopData();
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Redemption submission failed.', 'error');
@@ -136,360 +186,270 @@ export const Rewards: React.FC = () => {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category.toUpperCase()) {
-      case 'PLAY-TIME':
-        return '⏱️';
-      case 'SNACK-PACK':
-        return '🥤';
-      case 'GAME TOP-UP':
-        return '💎';
-      default:
-        return '🎁';
-    }
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* 1. Shop Header with Balance Summary */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+    <div className="shop-view">
+      {/* 1. Shop Head */}
+      <div className="shop-head">
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 900 }}>REWARDS LOOT SHOP</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Exchange earned credits for playtime, snacks, and game top-ups.
-          </p>
+          <h1>Prize Shop</h1>
+          <p className="m">Trade tokens for play time and snacks.</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div
-            style={{
-              padding: '0.4rem 0.85rem',
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border-neon)',
-              borderRadius: 'var(--radius-full)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.9rem',
-              fontWeight: 800,
-              color: 'var(--primary)',
-            }}
-          >
-            💰 {currentUser.credits.toLocaleString()} CR Available
+      </div>
+
+      {/* 2. Wallet Banner (Yellow) */}
+      <div className="wallet">
+        <div className="wallet-icon">
+          <ArcadeIcon name="gamepad" size={64} />
+        </div>
+        <div className="wallet-grow">
+          <p>Your wallet</p>
+          <div className="d">
+            <span>{currentUser.credits.toLocaleString()}</span> tokens
+          </div>
+        </div>
+        <div className="wallet-next">
+          <p id="nextTxt">
+            {nextLocked
+              ? `Next unlock: ${nextLocked.name} · ${tokensToGo.toLocaleString()} tokens to go`
+              : 'Everything is unlocked!'}
+          </p>
+          <div className="wallet-bar">
+            <div className="wallet-bar-fill" style={{ width: `${nextPercent}%` }} />
           </div>
         </div>
       </div>
 
-      {/* 2. Category Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
-        {CATEGORY_TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <Badge
-              key={tab.id}
-              variant={isActive ? 'primary' : 'neutral'}
-              style={{
-                cursor: 'pointer',
-                padding: '0.5rem 0.95rem',
-                fontSize: '0.8rem',
-                borderRadius: 'var(--radius-sm)',
-              }}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </Badge>
-          );
-        })}
-      </div>
-
-      {/* 3. Rewards Grid */}
+      {/* 3. Shelves */}
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
-          <Skeleton height="180px" />
-          <Skeleton height="180px" />
-          <Skeleton height="180px" />
-          <Skeleton height="180px" />
+        <div className="shelf">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="card prize" style={{ minHeight: '220px', opacity: 0.5 }}>
+              <div className="ico" style={{ background: 'var(--panel2)' }} />
+              <div style={{ height: '24px', background: 'var(--panel2)', borderRadius: '8px' }} />
+              <div style={{ height: '36px', background: 'var(--panel2)', borderRadius: '8px' }} />
+            </div>
+          ))}
         </div>
-      ) : filteredRewards.length === 0 ? (
-        <Card variant="default">
-          <EmptyState
-            icon={<span>🎁</span>}
-            title="NO REWARDS IN THIS CATEGORY"
-            description="Try selecting another category tab to view available loot items."
-          />
-        </Card>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-          {filteredRewards.map((reward) => {
-            const hasPending = playerRedemptions.some(
-              (r) => r.rewardId === reward.id && r.status === 'pending'
-            );
-            const eligibility = evaluateRewardEligibility(
-              reward,
-              currentUser,
-              config,
-              cooldowns,
-              hasPending
-            );
+        <>
+          {/* Shelf 1: Ready to Claim */}
+          {readyPrizes.length > 0 && (
+            <div>
+              <div className="sec">
+                <h2>Ready to claim</h2>
+                <span className="tag" style={{ background: 'var(--g)' }}>
+                  {readyPrizes.length}
+                </span>
+              </div>
+              <div className="shelf">
+                {readyPrizes.map(({ reward, eligibility }) => {
+                  const { icon, color } = getPrizeIcon(reward);
+                  const isAvailable = eligibility.canRedeem;
 
-            return (
-              <Card
-                key={reward.id}
-                variant={eligibility.canRedeem ? 'interactive' : 'default'}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  border: eligibility.canRedeem
-                    ? '1px solid rgba(0, 229, 255, 0.4)'
-                    : '1px solid var(--border-subtle)',
-                  opacity: eligibility.canRedeem ? 1 : 0.85,
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '1.35rem' }}>{getCategoryIcon(reward.category)}</span>
-                      <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>
-                        {reward.name}
-                      </span>
-                    </div>
-                    <Badge variant="primary" size="sm">{reward.category}</Badge>
-                  </div>
-
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem', minHeight: '34px', lineHeight: 1.35 }}>
-                    {reward.description}
-                  </p>
-
-                  <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <RankBadge rank={reward.minRank} size="sm" />
-                    <Badge variant="neutral" size="sm">
-                      {reward.cooldownMinutes > 0 ? `⏱️ ${reward.cooldownMinutes}m cd` : '⚡ Instant'}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
-                    <div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                        {reward.creditCost.toLocaleString()} CR
+                  return (
+                    <div key={reward.id} className="card prize can">
+                      <div className="prize-top">
+                        <div className="ico" style={{ background: color }}>
+                          <ArcadeIcon name={icon} />
+                        </div>
+                        <div className="prize-badges">
+                          {reward.minRank && reward.minRank !== 'Newbie' && (
+                            <span className="prize-badge rank">{reward.minRank}</span>
+                          )}
+                          {reward.cooldownMinutes > 0 && (
+                            <span className="prize-badge cooldown">{reward.cooldownMinutes}m cd</span>
+                          )}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--secondary)' }}>
-                        +{reward.expReward} EXP bonus
-                      </div>
-                    </div>
 
-                    {/* Eligibility Badge */}
-                    <div>
-                      {eligibility.state === 'available' && (
-                        <Badge variant="success" size="sm">AVAILABLE</Badge>
-                      )}
-                      {eligibility.state === 'pending' && (
-                        <Badge variant="warning" size="sm">PENDING</Badge>
-                      )}
-                      {eligibility.state === 'on_cooldown' && (
-                        <Badge variant="warning" size="sm">
-                          {eligibility.cooldownExpiresAt ? (
+                      <h3>{reward.name}</h3>
+                      <p className="prize-desc">{reward.description}</p>
+
+                      <div className="price">
+                        <ArcadeIcon name="gamepad" />
+                        <span>{reward.creditCost.toLocaleString()}</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={!isAvailable}
+                        onClick={() => handleOpenRedeemModal(reward)}
+                      >
+                        {eligibility.state === 'available' ? (
+                          'Claim prize'
+                        ) : eligibility.state === 'on_cooldown' ? (
+                          eligibility.cooldownExpiresAt ? (
                             <CooldownTimer expiresAt={eligibility.cooldownExpiresAt} onExpire={loadShopData} />
                           ) : (
-                            eligibility.statusMessage
+                            'On cooldown'
+                          )
+                        ) : eligibility.state === 'pending' ? (
+                          'Pending review'
+                        ) : (
+                          'Claim prize'
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Shelf 2: Almost Yours */}
+          {almostPrizes.length > 0 && (
+            <div>
+              <div className="sec">
+                <h2>Almost yours</h2>
+                <span className="tag" style={{ background: 'var(--y)' }}>
+                  {almostPrizes.length}
+                </span>
+              </div>
+              <div className="shelf">
+                {almostPrizes.map(({ reward, eligibility }) => {
+                  const { color } = getPrizeIcon(reward);
+                  const pct = Math.min(100, Math.round((currentUser.credits / reward.creditCost) * 100));
+                  const tokensNeeded = Math.max(0, reward.creditCost - currentUser.credits);
+
+                  return (
+                    <div key={reward.id} className="card prize lock">
+                      <div className="prize-top">
+                        <div className="ico" style={{ background: color }}>
+                          <ArcadeIcon name="lock" />
+                        </div>
+                        <div className="prize-badges">
+                          {eligibility.state === 'locked_rank' ? (
+                            <span className="prize-badge rank">Requires {reward.minRank}</span>
+                          ) : (
+                            <span className="prize-badge rank">{reward.minRank}</span>
                           )}
-                        </Badge>
-                      )}
-                      {eligibility.state === 'locked_rank' && (
-                        <Badge variant="neutral" size="sm">RANK LOCKED</Badge>
-                      )}
-                      {eligibility.state === 'insufficient_credits' && (
-                        <Badge variant="danger" size="sm">NEED CREDITS</Badge>
-                      )}
-                    </div>
-                  </div>
+                        </div>
+                      </div>
 
-                  {/* Status explanation helper if locked */}
-                  {!eligibility.canRedeem && (
-                    <div style={{ fontSize: '0.75rem', marginBottom: '0.5rem', fontWeight: 600 }}>
-                      {eligibility.state === 'on_cooldown' && eligibility.cooldownExpiresAt && (
-                        <span style={{ color: 'var(--warning)' }}>
-                          ⏳ Cooldown active: <CooldownTimer expiresAt={eligibility.cooldownExpiresAt} onExpire={loadShopData} />
-                        </span>
-                      )}
-                      {eligibility.state === 'locked_rank' && (
-                        <span style={{ color: 'var(--secondary)' }}>
-                          🔒 Requires {reward.minRank.toUpperCase()} ({Math.max(0, (config.rankThresholds[reward.minRank] ?? 0) - currentUser.exp).toLocaleString()} more EXP)
-                        </span>
-                      )}
-                      {eligibility.state === 'insufficient_credits' && (
-                        <span style={{ color: 'var(--danger)' }}>
-                          💰 Short by {(reward.creditCost - currentUser.credits).toLocaleString()} Credits
-                        </span>
-                      )}
-                      {eligibility.state === 'pending' && (
-                        <span style={{ color: 'var(--accent-gold)' }}>
-                          ⌛ Claim awaiting staff approval
-                        </span>
-                      )}
-                      {eligibility.state === 'inactive' && (
-                        <span style={{ color: 'var(--text-muted)' }}>
-                          🚫 Currently unavailable
-                        </span>
-                      )}
-                    </div>
-                  )}
+                      <h3>{reward.name}</h3>
+                      <p className="prize-desc">{reward.description}</p>
 
-                  <Button
-                    variant={eligibility.canRedeem ? 'primary' : 'secondary'}
-                    size="md"
-                    disabled={!eligibility.canRedeem}
-                    style={{ width: '100%' }}
-                    onClick={() => handleOpenRedeemModal(reward)}
-                  >
-                    {eligibility.state === 'available'
-                      ? 'Redeem Loot'
-                      : eligibility.state === 'on_cooldown'
-                      ? 'On Cooldown'
-                      : eligibility.state === 'pending'
-                      ? 'Pending Review'
-                      : eligibility.state === 'locked_rank'
-                      ? 'Rank Locked'
-                      : 'Insufficient Credits'}
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+                      <div className="price">
+                        <ArcadeIcon name="gamepad" />
+                        <span>{reward.creditCost.toLocaleString()}</span>
+                      </div>
+
+                      <div>
+                        <div className="prize-bar">
+                          <div className="prize-bar-fill" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="need" style={{ marginTop: '6px' }}>
+                          {eligibility.state === 'locked_rank'
+                            ? `Requires ${reward.minRank} rank`
+                            : `${tokensNeeded.toLocaleString()} more tokens to unlock`}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
-      {/* 4. Player's Redemption History Section */}
-      <Card
-        variant="default"
-        header={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.05em' }}>
-              MY REDEMPTION CLAIMS
-            </span>
-            <Button variant="ghost" size="sm" onClick={loadShopData}>
-              Refresh
-            </Button>
-          </div>
-        }
-      >
-        {playerRedemptions.length === 0 ? (
-          <EmptyState
-            icon={<span>🎁</span>}
-            title="NO REDEMPTIONS YET"
-            description="When you redeem shop rewards, your requests and cooldown statuses will appear here."
-          />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+      {/* 4. Player's Redemption History */}
+      {playerRedemptions.length > 0 && (
+        <div className="history-card">
+          <h2>My redemption claims</h2>
+          <div className="history-list">
             {playerRedemptions.map((redemp) => (
-              <div
-                key={redemp.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.75rem 0.85rem',
-                  background: 'var(--bg-elevated)',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-subtle)',
-                  flexWrap: 'wrap',
-                  gap: '0.5rem',
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                      {redemp.rewardName}
-                    </span>
-                    <Badge
-                      variant={
-                        redemp.status === 'approved'
-                          ? 'success'
-                          : redemp.status === 'rejected'
-                          ? 'danger'
-                          : 'warning'
-                      }
-                      size="sm"
-                    >
-                      {redemp.status}
-                    </Badge>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                    Requested: {new Date(redemp.requestedAt).toLocaleString()}
-                    {redemp.rejectNote && (
-                      <span style={{ color: 'var(--danger)', marginLeft: '0.5rem' }}>
-                        (Reason: {redemp.rejectNote})
-                      </span>
-                    )}
+              <div key={redemp.id} className="history-item">
+                <div className="history-item-left">
+                  <div>
+                    <div className="history-item-name">{redemp.rewardName}</div>
+                    <div className="history-item-time">
+                      Requested: {new Date(redemp.requestedAt).toLocaleString()}
+                      {redemp.rejectNote && ` · Reason: ${redemp.rejectNote}`}
+                    </div>
                   </div>
                 </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                    -{redemp.creditCost} CR
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                    Cooldown: {redemp.cooldownMinutes}m
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div className="history-item-cost">-{redemp.creditCost} tokens</div>
+                  <span
+                    className="tag"
+                    style={{
+                      background:
+                        redemp.status === 'approved'
+                          ? 'var(--g)'
+                          : redemp.status === 'rejected'
+                          ? 'var(--r)'
+                          : 'var(--y)',
+                    }}
+                  >
+                    {redemp.status}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
-        )}
-      </Card>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
-      <Modal
-        isOpen={Boolean(selectedReward)}
-        onClose={() => setSelectedReward(null)}
-        title="CONFIRM REWARD REDEMPTION"
-        size="sm"
-      >
-        {selectedReward && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+      {selectedReward && (
+        <div className="modal-overlay" onClick={() => setSelectedReward(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2>Claim prize</h2>
+            <p style={{ color: 'var(--mute)', margin: 0, fontSize: '15px' }}>
               You are requesting to redeem <strong>{selectedReward.name}</strong>.
             </p>
 
-            <div style={{ background: 'var(--bg-app)', border: '1px solid var(--border-medium)', padding: '0.85rem', borderRadius: 'var(--radius-sm)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Current Balance:</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{currentUser.credits} CR</span>
+            <div className="modal-summary">
+              <div className="modal-row">
+                <span>Current tokens</span>
+                <b>{currentUser.credits.toLocaleString()} tokens</b>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Cost:</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--danger)' }}>
-                  -{selectedReward.creditCost} CR
-                </span>
+              <div className="modal-row">
+                <span>Cost</span>
+                <b style={{ color: 'var(--r)' }}>-{selectedReward.creditCost.toLocaleString()} tokens</b>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.35rem' }}>
-                <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.85rem' }}>Balance on Approval:</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--primary)' }}>
-                  {currentUser.credits - selectedReward.creditCost} CR
-                </span>
+              <div className="modal-row total">
+                <span>Tokens remaining</span>
+                <b style={{ color: 'var(--y)' }}>
+                  {(currentUser.credits - selectedReward.creditCost).toLocaleString()} tokens
+                </b>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.35rem' }}>
-                <span style={{ color: 'var(--secondary)', fontSize: '0.8rem' }}>EXP Bonus:</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--secondary)' }}>
-                  +{selectedReward.expReward} EXP
-                </span>
-              </div>
+              {selectedReward.expReward > 0 && (
+                <div className="modal-row" style={{ color: 'var(--v)' }}>
+                  <span>EXP bonus</span>
+                  <b>+{selectedReward.expReward} EXP</b>
+                </div>
+              )}
             </div>
 
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Upon confirmation, your request is submitted for staff authorization. Credits are deducted once approved.
-            </div>
+            <p style={{ fontSize: '13px', color: 'var(--mute)', margin: 0 }}>
+              Show this at the counter once submitted. Staff will review and grant your prize.
+            </p>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <Button variant="ghost" onClick={() => setSelectedReward(null)}>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn"
+                style={{ background: 'var(--panel2)', color: 'var(--ink)' }}
+                onClick={() => setSelectedReward(null)}
+              >
                 Cancel
-              </Button>
-              <Button variant="primary" isLoading={isSubmitting} onClick={handleConfirmRedeem}>
-                Confirm Claim
-              </Button>
+              </button>
+              <button
+                type="button"
+                className="btn"
+                style={{ background: 'var(--g)' }}
+                disabled={isSubmitting}
+                onClick={handleConfirmRedeem}
+              >
+                {isSubmitting ? 'Submitting...' : 'Confirm claim'}
+              </button>
             </div>
           </div>
-        )}
-      </Modal>
+        </div>
+      )}
     </div>
   );
 };

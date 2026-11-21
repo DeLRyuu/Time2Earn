@@ -3,6 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { ArcadeIcon } from '../../components/ui/ArcadeIcon';
 import { Link } from 'react-router-dom';
 import { fetchAdminOverviewStats } from '../../services/adminService';
 import type { AdminOverviewStats } from '../../services/adminService';
@@ -68,21 +69,22 @@ export const AdminDashboard: React.FC = () => {
       {stats && stats.alerts.length > 0 && (
         <div
           style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.08)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '3px solid var(--r)',
+            borderRadius: '16px',
+            boxShadow: '0 4px 0 var(--line)',
             padding: '1rem 1.25rem',
             display: 'flex',
             alignItems: 'flex-start',
             gap: '0.75rem',
           }}
         >
-          <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+          <ArcadeIcon name="bolt" size={22} style={{ color: 'var(--r)' }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-              OPERATIONAL ALERTS
+            <div style={{ fontWeight: 800, color: 'var(--r)', fontSize: '0.95rem', marginBottom: '0.25rem' }}>
+              Operational alerts
             </div>
-            <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+            <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--ink)', fontSize: '0.85rem' }}>
               {stats.alerts.map((alert, idx) => (
                 <li key={idx} style={{ marginBottom: '0.2rem' }}>{alert}</li>
               ))}
@@ -96,9 +98,9 @@ export const AdminDashboard: React.FC = () => {
         {/* Pending Sessions */}
         <Card variant={stats && stats.pendingSessionsCount > 0 ? 'neon' : 'default'}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>PENDING SESSIONS</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--mute)' }}>Pending sessions</span>
             {stats && stats.pendingSessionsCount > 0 ? (
-              <Badge variant="warning" size="sm">Action Req</Badge>
+              <Badge variant="warning" size="sm">Action req</Badge>
             ) : (
               <Badge variant="success" size="sm">Clear</Badge>
             )}
@@ -107,16 +109,16 @@ export const AdminDashboard: React.FC = () => {
             {loading ? <Skeleton width="40px" height="36px" /> : stats?.pendingSessionsCount ?? 0}
           </div>
           <Link to="/admin/sessions" style={{ textDecoration: 'none' }}>
-            <Button variant="ghost" size="sm" style={{ padding: 0 }}>Review Sessions $\rightarrow$</Button>
+            <Button variant="ghost" size="sm" style={{ padding: 0 }}>Review sessions →</Button>
           </Link>
         </Card>
 
         {/* Pending Redemptions */}
         <Card variant={stats && stats.pendingRedemptionsCount > 0 ? 'neon' : 'default'}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>PENDING REDEMPTIONS</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--mute)' }}>Pending redemptions</span>
             {stats && stats.pendingRedemptionsCount > 0 ? (
-              <Badge variant="warning" size="sm">Action Req</Badge>
+              <Badge variant="warning" size="sm">Action req</Badge>
             ) : (
               <Badge variant="success" size="sm">Clear</Badge>
             )}
@@ -125,35 +127,35 @@ export const AdminDashboard: React.FC = () => {
             {loading ? <Skeleton width="40px" height="36px" /> : stats?.pendingRedemptionsCount ?? 0}
           </div>
           <Link to="/admin/redemptions" style={{ textDecoration: 'none' }}>
-            <Button variant="ghost" size="sm" style={{ padding: 0 }}>Review Claims $\rightarrow$</Button>
+            <Button variant="ghost" size="sm" style={{ padding: 0 }}>Review claims →</Button>
           </Link>
         </Card>
 
         {/* Active Registered Players */}
         <Card variant="default">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>REGISTERED PLAYERS</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--mute)' }}>Registered players</span>
             <Badge variant="primary" size="sm">Total</Badge>
           </div>
           <div style={{ fontSize: '2.25rem', fontWeight: 900, margin: '0.5rem 0', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
             {loading ? <Skeleton width="40px" height="36px" /> : stats?.activePlayersCount ?? 0}
           </div>
           <Link to="/admin/users" style={{ textDecoration: 'none' }}>
-            <Button variant="ghost" size="sm" style={{ padding: 0 }}>Manage Players $\rightarrow$</Button>
+            <Button variant="ghost" size="sm" style={{ padding: 0 }}>Manage players →</Button>
           </Link>
         </Card>
 
         {/* Outstanding Debts (Count Only) */}
         <Card variant="default">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>OUTSTANDING DEBTS</span>
-            <Badge variant="danger" size="sm">Shop Ledger</Badge>
+            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--mute)' }}>Outstanding debts</span>
+            <Badge variant="danger" size="sm">Shop ledger</Badge>
           </div>
           <div style={{ fontSize: '2.25rem', fontWeight: 900, margin: '0.5rem 0', color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>
             {loading ? <Skeleton width="40px" height="36px" /> : stats?.outstandingDebtsCount ?? 0}
           </div>
           <Link to="/admin/debts" style={{ textDecoration: 'none' }}>
-            <Button variant="ghost" size="sm" style={{ padding: 0 }}>View Debts (Phase 9) $\rightarrow$</Button>
+            <Button variant="ghost" size="sm" style={{ padding: 0 }}>View debts →</Button>
           </Link>
         </Card>
       </div>
@@ -163,7 +165,7 @@ export const AdminDashboard: React.FC = () => {
         variant="default"
         header={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <span>RECENT SHOP ACTIVITY</span>
+            <span>Recent shop activity</span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Latest session and reward actions</span>
           </div>
         }
@@ -196,9 +198,7 @@ export const AdminDashboard: React.FC = () => {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span style={{ fontSize: '1.25rem' }}>
-                    {act.type === 'session' ? '🖥️' : '🎁'}
-                  </span>
+                  <ArcadeIcon name={act.type === 'session' ? 'joy' : 'gift'} size={20} style={{ color: 'var(--y)' }} />
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
                       {act.title}

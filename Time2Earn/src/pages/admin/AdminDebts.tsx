@@ -274,7 +274,7 @@ export const AdminDebts: React.FC = () => {
                     </Badge>
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                    Using {req.creditsToUse} Credits @ rate ₱{req.rateUsed}/CR $\rightarrow$ ₱{req.phpEquivalent.toFixed(2)} relief
+                    Using {req.creditsToUse} tokens @ rate ₱{req.rateUsed}/token → ₱{req.phpEquivalent.toFixed(2)} relief
                   </div>
                 </div>
 

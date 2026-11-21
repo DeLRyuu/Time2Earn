@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Badge } from '../ui/Badge';
-import { RankBadge } from '../ui/RankBadge';
 import { useAuth } from '../../hooks/useAuth';
+import { ArcadeIcon } from '../ui/ArcadeIcon';
 import './Header.css';
 
 interface HeaderProps {
@@ -19,70 +18,43 @@ export const Header: React.FC<HeaderProps> = ({ isAdmin = false }) => {
   };
 
   return (
-    <header className="app-header">
-      <div className="header-mobile-brand">
-        <Link to={isAdmin ? "/admin" : "/player"} className="mobile-brand-link">
-          <span className="mobile-brand-logo">⚡</span>
-          <span className="mobile-brand-title">TIME<span className="highlight">2</span>EARN</span>
+    <header className="top">
+      {/* Non-admin Player View: Token Balance Chip & Username */}
+      {!isAdmin && isAuthenticated && user && (
+        <>
+          <span className="chip t" title="Token Balance">
+            <ArcadeIcon name="pad" />
+            <b id="tk">{user.credits.toLocaleString()}</b> tokens
+          </span>
+          <span className="who">{user.username}</span>
+        </>
+      )}
+
+      {/* Admin View Indicator */}
+      {isAdmin && isAuthenticated && user && (
+        <span className="chip x" style={{ color: 'var(--v)' }}>
+          <ArcadeIcon name="shield" />
+          <b>Admin</b> console
+        </span>
+      )}
+
+      {/* Action / Auth controls */}
+      {isAuthenticated && user ? (
+        <button
+          onClick={handleLogout}
+          className="btn-logout"
+          title="Sign out of Time2Earn"
+          aria-label="Sign out"
+        >
+          <ArcadeIcon name="logout" size={16} />
+          <span>Exit</span>
+        </button>
+      ) : (
+        <Link to="/login" className="btn-login" aria-label="Sign in">
+          <ArcadeIcon name="user" size={16} />
+          <span>Login</span>
         </Link>
-      </div>
-
-      <div className="header-status-bar">
-        {!isAdmin && user && (
-          <div className="player-quick-stats">
-            <div className="stat-pill credits-pill" title="Spendable Credits">
-              <span className="stat-icon">🪙</span>
-              <span className="stat-val">{user.credits.toLocaleString()}</span>
-              <span className="stat-label">CR</span>
-            </div>
-            <div className="stat-pill exp-pill" title="Lifetime EXP">
-              <span className="stat-icon">⚡</span>
-              <span className="stat-val">{user.exp.toLocaleString()}</span>
-              <span className="stat-label">EXP</span>
-            </div>
-            <div className="rank-badge-wrap">
-              <RankBadge rank={user.rank} size="sm" />
-            </div>
-          </div>
-        )}
-
-        {isAdmin && (
-          <div className="admin-status-wrap">
-            <Badge variant="danger" size="sm">STAFF CONSOLE</Badge>
-          </div>
-        )}
-
-        <div className="header-actions">
-          {isAuthenticated && user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                {user.username}
-              </span>
-              <button
-                onClick={handleLogout}
-                title="Sign out of console"
-                style={{
-                  padding: '0.3rem 0.6rem',
-                  fontSize: '0.75rem',
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 'var(--radius-xs)',
-                  color: 'var(--danger)',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                }}
-              >
-                LOGOUT
-              </button>
-            </div>
-          ) : (
-            <Link to="/login" className="login-link">
-              <span className="login-avatar">👤</span>
-              <span className="login-label">Login</span>
-            </Link>
-          )}
-        </div>
-      </div>
+      )}
     </header>
   );
 };

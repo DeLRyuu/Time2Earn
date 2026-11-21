@@ -1,13 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
+import { ArcadeIcon } from '../../components/ui/ArcadeIcon';
 import { RankBadge } from '../../components/ui/RankBadge';
-import { ProgressBar } from '../../components/ui/ProgressBar';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { EmptyState } from '../../components/ui/EmptyState';
-import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../hooks/useAuth';
 import { useConfig } from '../../hooks/useConfig';
 import { usePwaInstall } from '../../lib/pwa';
@@ -20,6 +14,7 @@ import { useToast } from '../../hooks/useToast';
 import type { SessionRequest } from '../../types/session';
 import type { RedemptionRequest } from '../../types/redemption';
 import type { DebtRecord, DebtPaymentRequest } from '../../types/debt';
+import './Profile.css';
 
 interface ActivityItem {
   id: string;
@@ -64,17 +59,19 @@ export const Profile: React.FC = () => {
   const [isSubmittingDebt, setIsSubmittingDebt] = useState(false);
 
   // Fallback demo user if not logged in
-  const currentUser = user || {
-    uid: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
-    username: 'lois_123xx',
-    role: 'user' as const,
-    credits: 332,
-    exp: 1251,
-    rank: 'Gamer',
-    streak: 3,
-    isBanned: false,
-    isRestricted: false,
-  };
+  const currentUser = useMemo(() => {
+    return user || {
+      uid: '1DrJrVqcwfULvzDyyLV5S8b8ST03',
+      username: 'lois_123xx',
+      role: 'user' as const,
+      credits: 332,
+      exp: 1251,
+      rank: 'Gamer',
+      streak: 3,
+      isBanned: false,
+      isRestricted: false,
+    };
+  }, [user]);
 
   const loadProfileData = useCallback(async () => {
     setLoading(true);
@@ -133,11 +130,11 @@ export const Profile: React.FC = () => {
       return;
     }
     if (creditsToUse <= 0) {
-      showToast('Please enter an amount of credits greater than 0.', 'error');
+      showToast('Please enter an amount of tokens greater than 0.', 'error');
       return;
     }
     if (creditsToUse > currentUser.credits) {
-      showToast(`Insufficient credits. You only have ${currentUser.credits} Credits.`, 'error');
+      showToast(`Insufficient tokens. You only have ${currentUser.credits} tokens.`, 'error');
       return;
     }
 
@@ -179,23 +176,23 @@ export const Profile: React.FC = () => {
     const sessionItems: ActivityItem[] = sessions.map((s) => ({
       id: `sess-${s.id}`,
       type: 'session',
-      title: `Play Session (${s.unitId})`,
-      subtitle: `Amount paid: ₱${s.amountPaid.toFixed(2)}`,
+      title: `PC Session (${s.unitId})`,
+      subtitle: `Paid: ₱${s.amountPaid.toFixed(2)}`,
       timestamp: s.requestedAt,
       status: s.status,
       creditDelta: s.creditsEarned,
-      badgeLabel: `+${s.creditsEarned} CR`,
+      badgeLabel: `+${s.creditsEarned} tokens`,
     }));
 
     const redemptionItems: ActivityItem[] = redemptions.map((r) => ({
       id: `redemp-${r.id}`,
       type: 'redemption',
-      title: `Reward: ${r.rewardName}`,
-      subtitle: `Redemption claim`,
+      title: `Prize: ${r.rewardName}`,
+      subtitle: 'Prize claim',
       timestamp: r.requestedAt,
       status: r.status,
       creditDelta: -r.creditCost,
-      badgeLabel: `-${r.creditCost} CR`,
+      badgeLabel: `-${r.creditCost} tokens`,
     }));
 
     const combined = [...sessionItems, ...redemptionItems];
@@ -235,180 +232,169 @@ export const Profile: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: 'pending' | 'approved' | 'rejected') => {
-    switch (status) {
-      case 'approved':
-        return <Badge variant="success" size="sm">Approved</Badge>;
-      case 'pending':
-        return <Badge variant="gold" size="sm">Pending</Badge>;
-      case 'rejected':
-        return <Badge variant="danger" size="sm">Rejected</Badge>;
-    }
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="profile-view">
       {/* 1. Header & Identity */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0, letterSpacing: '-0.02em' }}>
-            PLAYER PROFILE
-          </h1>
-          <Badge variant="primary" size="md">LEVEL {rankProgress.currentRank.toUpperCase()}</Badge>
+      <div className="profile-head">
+        <div>
+          <h1>Player profile</h1>
+          <p className="profile-sub">
+            Track your personal ranking ladder, tokens, and verified shop activity.
+          </p>
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-          Track your personal ranking ladder, spendable credits, and verified activity history.
-        </p>
       </div>
 
-      {/* 2. Player Overview Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-        {/* Credits */}
-        <Card variant="neon">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.75rem' }}>💰</span>
-            <div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>SPENDABLE CREDITS</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                {currentUser.credits.toLocaleString()} CR
-              </div>
-            </div>
+      {/* 2. Overview Stat Grid */}
+      <div className="profile-stats-grid">
+        {/* Spendable Tokens */}
+        <div className="profile-stat-card tokens">
+          <div className="stat-icon-tile tokens">
+            <ArcadeIcon name="gamepad" size={28} />
           </div>
-        </Card>
+          <div className="stat-info">
+            <span className="stat-label">Spendable tokens</span>
+            <span className="stat-val" style={{ color: 'var(--y)' }}>
+              {currentUser.credits.toLocaleString()}
+            </span>
+          </div>
+        </div>
 
         {/* Current Rank */}
-        <Card variant="default">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.75rem' }}>🏆</span>
-            <div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>CURRENT RANK</div>
-              <div style={{ marginTop: '0.25rem' }}>
-                <RankBadge rank={currentUser.rank} size="md" />
-              </div>
+        <div className="profile-stat-card">
+          <div className="stat-icon-tile rank">
+            <ArcadeIcon name="crown" size={28} />
+          </div>
+          <div className="stat-info">
+            <span className="stat-label">Current rank</span>
+            <div style={{ marginTop: '2px' }}>
+              <RankBadge rank={currentUser.rank} size="sm" />
             </div>
           </div>
-        </Card>
-
-        {/* Lifetime EXP */}
-        <Card variant="default">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.75rem' }}>⭐</span>
-            <div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>LIFETIME EXP</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--accent-gold)', fontFamily: 'var(--font-mono)' }}>
-                {currentUser.exp.toLocaleString()} EXP
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Daily Streak */}
-        <Card variant="default">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.75rem' }}>🔥</span>
-            <div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>ACTIVE STREAK</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--warning)', fontFamily: 'var(--font-mono)' }}>
-                {currentUser.streak || 0} {currentUser.streak === 1 ? 'Day' : 'Days'}
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* 3. Rank Progression Ladder Card */}
-      <Card
-        variant="default"
-        header={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>RANK PROGRESSION LADDER</span>
-              <Badge variant="gold" size="sm">
-                {rankProgress.isMaxRank ? 'MAX TIER' : `NEXT: ${rankProgress.nextRank?.toUpperCase()}`}
-              </Badge>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAllLadder((prev) => !prev)}
-            >
-              {showAllLadder ? 'Collapse Ladder' : 'View All 12 Tiers'}
-            </Button>
-          </div>
-        }
-      >
-        {/* Tier Progress Bar */}
-        <div style={{ marginBottom: '1.25rem' }}>
-          <ProgressBar
-            value={rankProgress.progressPercent}
-            max={100}
-            variant="gold"
-            label={
-              rankProgress.isMaxRank
-                ? 'Master of Time2Earn'
-                : `Progress to ${rankProgress.nextRank}`
-            }
-            subLabel={
-              rankProgress.isMaxRank
-                ? 'Highest rank achieved'
-                : `${rankProgress.expRemaining.toLocaleString()} EXP needed`
-            }
-            showPercentage
-          />
         </div>
 
-        {/* Ladder Tiers */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {(showAllLadder ? rankLadder : rankLadder.filter((t) => t.status === 'current' || t.status === 'reached').slice(-3).concat(rankLadder.filter((t) => t.status === 'locked').slice(0, 2))).map((tier) => {
+        {/* Lifetime EXP */}
+        <div className="profile-stat-card">
+          <div className="stat-icon-tile exp">
+            <ArcadeIcon name="bolt" size={28} />
+          </div>
+          <div className="stat-info">
+            <span className="stat-label">Lifetime EXP</span>
+            <span className="stat-val" style={{ color: 'var(--v)' }}>
+              {currentUser.exp.toLocaleString()}
+            </span>
+          </div>
+        </div>
+
+        {/* Active Streak */}
+        <div className="profile-stat-card">
+          <div className="stat-icon-tile streak">
+            <ArcadeIcon name="flame" size={28} />
+          </div>
+          <div className="stat-info">
+            <span className="stat-label">Active streak</span>
+            <span className="stat-val" style={{ color: 'var(--r)' }}>
+              {currentUser.streak || 0} {currentUser.streak === 1 ? 'day' : 'days'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Rank Progression Ladder */}
+      <div className="profile-panel">
+        <div className="panel-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h2 className="panel-title">Rank progression ladder</h2>
+            <span
+              className="status-pill"
+              style={{ background: 'var(--v)', color: 'var(--on)' }}
+            >
+              {rankProgress.isMaxRank ? 'Max tier' : `Next: ${rankProgress.nextRank}`}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="btn"
+            style={{
+              background: 'var(--panel2)',
+              color: 'var(--ink)',
+              padding: '6px 14px',
+              fontSize: '14px',
+            }}
+            onClick={() => setShowAllLadder((prev) => !prev)}
+          >
+            {showAllLadder ? 'Collapse ladder' : 'View all 12 tiers'}
+          </button>
+        </div>
+
+        {/* Segmented Tier Progress Meter */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>
+            <span>
+              {rankProgress.isMaxRank ? 'Master of Time2Earn' : `Progress to ${rankProgress.nextRank}`}
+            </span>
+            <span style={{ color: 'var(--mute)' }}>
+              {rankProgress.isMaxRank
+                ? 'Highest rank achieved'
+                : `${rankProgress.expRemaining.toLocaleString()} EXP needed`}
+            </span>
+          </div>
+          <div className="hud-bar" style={{ height: '14px' }}>
+            <div
+              className="hud-bar-fill"
+              style={{ width: `${rankProgress.progressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Ladder Rows */}
+        <div className="ladder-list">
+          {(showAllLadder
+            ? rankLadder
+            : rankLadder
+                .filter((t) => t.status === 'current' || t.status === 'reached')
+                .slice(-3)
+                .concat(rankLadder.filter((t) => t.status === 'locked').slice(0, 2))
+          ).map((tier) => {
             const isCurrent = tier.status === 'current';
             const isReached = tier.status === 'reached';
 
             return (
               <div
                 key={tier.name}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: isCurrent
-                    ? 'rgba(255, 183, 3, 0.08)'
-                    : isReached
-                    ? 'rgba(16, 185, 129, 0.05)'
-                    : 'rgba(30, 41, 59, 0.4)',
-                  border: isCurrent
-                    ? '1px solid var(--accent-gold)'
-                    : isReached
-                    ? '1px solid rgba(16, 185, 129, 0.2)'
-                    : '1px solid var(--border-subtle)',
-                  opacity: tier.status === 'locked' ? 0.75 : 1,
-                }}
+                className={`ladder-item ${isCurrent ? 'current' : isReached ? 'reached' : 'locked'}`}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span style={{ fontSize: '1.1rem' }}>
-                    {isCurrent ? '⭐' : isReached ? '✓' : '🔒'}
-                  </span>
+                <div className="ladder-left">
+                  <ArcadeIcon
+                    name={isCurrent ? 'crown' : isReached ? 'check' : 'lock'}
+                    size={20}
+                    style={{
+                      color: isCurrent ? 'var(--y)' : isReached ? 'var(--g)' : 'var(--mute)',
+                    }}
+                  />
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <RankBadge rank={tier.name} size="sm" />
-                      {isCurrent && <Badge variant="gold" size="sm">CURRENT</Badge>}
+                      {isCurrent && (
+                        <span className="status-pill approved" style={{ fontSize: '11px' }}>
+                          Current
+                        </span>
+                      )}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--mute)', marginTop: '2px' }}>
                       Threshold: {tier.threshold.toLocaleString()} EXP
                     </div>
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'right' }}>
-                  {isReached && <Badge variant="success" size="sm">REACHED</Badge>}
+                <div style={{ textAlign: 'right', fontWeight: 800 }}>
+                  {isReached && <span className="status-pill approved">Reached</span>}
                   {isCurrent && (
-                    <span style={{ fontSize: '0.8rem', color: 'var(--accent-gold)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                    <span style={{ color: 'var(--y)', fontFamily: 'Lilita One', fontSize: '16px' }}>
                       Active
                     </span>
                   )}
                   {tier.status === 'locked' && (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--mute)' }}>
                       Need {tier.expNeeded.toLocaleString()} EXP
                     </span>
                   )}
@@ -417,344 +403,284 @@ export const Profile: React.FC = () => {
             );
           })}
         </div>
-      </Card>
+      </div>
 
-      {/* 4. Shop Debt Account Card */}
-      <Card
-        variant={debt && debt.amount > 0 ? 'neon' : 'default'}
-        header={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>SHOP DEBT ACCOUNT</span>
-              {debt && debt.isRestricted && (
-                <Badge variant="danger" size="sm">CLAIMS RESTRICTED</Badge>
-              )}
-            </div>
-            <Badge variant={debt && debt.amount > 0 ? 'warning' : 'success'} size="sm">
-              {debt && debt.amount > 0 ? `₱${debt.amount.toFixed(2)} (${debt.tier.toUpperCase()})` : 'CLEAR (₱0.00)'}
-            </Badge>
+      {/* 4. Shop Debt Account */}
+      <div className={`debt-card ${debt && debt.amount > 0 ? 'has-debt' : ''}`}>
+        <div className="panel-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h2 className="panel-title">Shop debt account</h2>
+            {debt && debt.isRestricted && (
+              <span className="status-pill rejected">Claims restricted</span>
+            )}
           </div>
-        }
-        footer={
-          debt && debt.amount > 0 ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Rate: 1 Credit = ₱{DEBT_CREDIT_RATE} debt relief
+          <span
+            className="status-pill"
+            style={{
+              background: debt && debt.amount > 0 ? 'var(--r)' : 'var(--g)',
+              color: debt && debt.amount > 0 ? '#ffffff' : 'var(--on)',
+            }}
+          >
+            {debt && debt.amount > 0 ? `₱${debt.amount.toFixed(2)} (${debt.tier})` : 'Clear (₱0.00)'}
+          </span>
+        </div>
+
+        {debt && debt.amount > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <p style={{ margin: 0, fontSize: '15px' }}>
+              You have an outstanding shop balance of <strong>₱{debt.amount.toFixed(2)}</strong>.
+              {debt.daysOverdue > 0 && ` Overdue by ${debt.daysOverdue} days.`}
+            </p>
+
+            {debt.isRestricted && (
+              <div className="debt-banner danger">
+                <ArcadeIcon name="lock" size={20} />
+                <span>
+                  High debt restriction active (₱30+). Playtime session claims and reward redemptions are locked until debt is below ₱30.00.
+                </span>
+              </div>
+            )}
+
+            {debtRequests.some((r) => r.status === 'pending') && (
+              <div className="debt-banner warning">
+                <ArcadeIcon name="clock" size={20} />
+                <span>
+                  You have a pending debt payment of ₱{debtRequests.find((r) => r.status === 'pending')?.phpEquivalent.toFixed(2)} ({debtRequests.find((r) => r.status === 'pending')?.creditsToUse} tokens) awaiting staff approval.
+                </span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '6px' }}>
+              <span style={{ fontSize: '14px', color: 'var(--mute)', fontWeight: 700 }}>
+                Rate: 1 token = ₱{DEBT_CREDIT_RATE} debt relief
               </span>
-              <Button
-                variant="primary"
-                size="sm"
+              <button
+                type="button"
+                className="btn"
                 onClick={() => {
                   setCreditsToUse(Math.min(currentUser.credits, Math.ceil(debt.amount / DEBT_CREDIT_RATE)));
                   setIsDebtModalOpen(true);
                 }}
                 disabled={currentUser.credits <= 0 || debtRequests.some((r) => r.status === 'pending')}
               >
-                {debtRequests.some((r) => r.status === 'pending') ? 'Payment Pending Approval' : 'Pay Debt with Credits'}
-              </Button>
+                {debtRequests.some((r) => r.status === 'pending') ? 'Payment pending approval' : 'Pay debt with tokens'}
+              </button>
             </div>
-          ) : undefined
-        }
-      >
-        {debt && debt.amount > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
-              You have an outstanding shop balance of <strong>₱{debt.amount.toFixed(2)}</strong>.
-              {debt.daysOverdue > 0 && ` Overdue by ${debt.daysOverdue} days.`}
-            </p>
-
-            {debt.isRestricted && (
-              <div style={{ padding: '0.65rem 0.85rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', color: 'var(--danger)' }}>
-                ⚠️ High Debt Restriction Active (₱30+). Playtime session claims and reward redemptions are locked until your debt is reduced below ₱30.00.
-              </div>
-            )}
-
-            {debtRequests.some((r) => r.status === 'pending') && (
-              <div style={{ padding: '0.65rem 0.85rem', backgroundColor: 'rgba(255, 183, 3, 0.1)', border: '1px solid rgba(255, 183, 3, 0.3)', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', color: 'var(--accent-gold)' }}>
-                ⏳ You have a pending credit debt payment of ₱{debtRequests.find((r) => r.status === 'pending')?.phpEquivalent.toFixed(2)} ({debtRequests.find((r) => r.status === 'pending')?.creditsToUse} CR) awaiting admin approval.
-              </div>
-            )}
           </div>
         ) : (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
-            Your account is completely clear of shop debts. When debts occur, payments can be made with spendable credits at <strong>₱{DEBT_CREDIT_RATE} per credit</strong>.
+          <p style={{ margin: 0, fontSize: '15px', color: 'var(--mute)' }}>
+            Your account is completely clear of shop debts. When debts occur, payments can be made with spendable tokens at <strong>₱{DEBT_CREDIT_RATE} per token</strong>.
           </p>
         )}
-      </Card>
+      </div>
 
-      {/* 5. Combined Activity & History Timeline */}
-      <Card
-        variant="default"
-        header={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <span>ACTIVITY & HISTORY</span>
-            {/* Filter Tabs */}
-            <div style={{ display: 'flex', gap: '0.25rem', backgroundColor: 'var(--bg-elevated)', padding: '0.25rem', borderRadius: 'var(--radius-sm)' }}>
-              <button
-                onClick={() => { setActiveTab('all'); setVisibleCount(PAGE_SIZE); }}
-                style={{
-                  background: activeTab === 'all' ? 'var(--primary)' : 'transparent',
-                  color: activeTab === 'all' ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                  border: 'none',
-                  padding: '0.25rem 0.6rem',
-                  borderRadius: 'var(--radius-xs)',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                All ({allActivities.length})
-              </button>
-              <button
-                onClick={() => { setActiveTab('sessions'); setVisibleCount(PAGE_SIZE); }}
-                style={{
-                  background: activeTab === 'sessions' ? 'var(--primary)' : 'transparent',
-                  color: activeTab === 'sessions' ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                  border: 'none',
-                  padding: '0.25rem 0.6rem',
-                  borderRadius: 'var(--radius-xs)',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                Sessions ({sessions.length})
-              </button>
-              <button
-                onClick={() => { setActiveTab('redemptions'); setVisibleCount(PAGE_SIZE); }}
-                style={{
-                  background: activeTab === 'redemptions' ? 'var(--primary)' : 'transparent',
-                  color: activeTab === 'redemptions' ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                  border: 'none',
-                  padding: '0.25rem 0.6rem',
-                  borderRadius: 'var(--radius-xs)',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                Redemptions ({redemptions.length})
-              </button>
-            </div>
+      {/* 5. Activity & History Timeline */}
+      <div className="profile-panel">
+        <div className="panel-header">
+          <h2 className="panel-title">Activity & history</h2>
+          <div className="filter-tabs">
+            <button
+              type="button"
+              className={`filter-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('all'); setVisibleCount(PAGE_SIZE); }}
+            >
+              All ({allActivities.length})
+            </button>
+            <button
+              type="button"
+              className={`filter-tab-btn ${activeTab === 'sessions' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('sessions'); setVisibleCount(PAGE_SIZE); }}
+            >
+              Sessions ({sessions.length})
+            </button>
+            <button
+              type="button"
+              className={`filter-tab-btn ${activeTab === 'redemptions' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('redemptions'); setVisibleCount(PAGE_SIZE); }}
+            >
+              Prizes ({redemptions.length})
+            </button>
           </div>
-        }
-      >
+        </div>
+
         {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <Skeleton height="50px" />
-            <Skeleton height="50px" />
-            <Skeleton height="50px" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="activity-row" style={{ minHeight: '60px', opacity: 0.5 }} />
+            ))}
           </div>
         ) : filteredActivities.length === 0 ? (
-          <EmptyState
-            icon={activeTab === 'sessions' ? '🖥️' : activeTab === 'redemptions' ? '🎁' : '⚡'}
-            title={
-              activeTab === 'sessions'
-                ? 'No Gaming Sessions Yet'
-                : activeTab === 'redemptions'
-                ? 'No Rewards Redeemed Yet'
-                : 'No Activity History'
-            }
-            description={
-              activeTab === 'sessions'
-                ? 'Play at any PC unit in the gaming shop to start earning credits and leveling up.'
-                : activeTab === 'redemptions'
-                ? 'Redeem your earned credits in the Rewards shop for session time, snacks, or top-ups.'
-                : 'Your session claims and reward redemptions will appear here once submitted.'
-            }
-          />
+          <div style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--mute)' }}>
+            <ArcadeIcon name="gamepad" size={48} style={{ margin: '0 auto 12px' }} />
+            <h3 style={{ fontFamily: 'Lilita One', fontSize: '20px', margin: 0, color: 'var(--ink)' }}>
+              No activity records found
+            </h3>
+            <p style={{ fontSize: '14px', margin: '6px 0 0' }}>
+              Your session claims and prize redemptions will appear here once submitted.
+            </p>
+          </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="activity-list">
             {displayedActivities.map((act) => (
-              <div
-                key={act.id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '0.85rem 1rem',
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'rgba(30, 41, 59, 0.4)',
-                  border: '1px solid var(--border-subtle)',
-                  flexWrap: 'wrap',
-                  gap: '0.5rem',
-                }}
-              >
-                {/* Left: Icon & Title */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div
-                    style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: 'var(--radius-sm)',
-                      backgroundColor: act.type === 'session' ? 'rgba(0, 229, 255, 0.1)' : 'rgba(255, 183, 3, 0.1)',
-                      color: act.type === 'session' ? 'var(--primary)' : 'var(--accent-gold)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.1rem',
-                    }}
-                  >
-                    {act.type === 'session' ? '🖥️' : '🎁'}
+              <div key={act.id} className="activity-row">
+                <div className="activity-left">
+                  <div className={`activity-icon-tile ${act.type}`}>
+                    <ArcadeIcon name={act.type === 'session' ? 'clock' : 'gift'} size={24} />
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                      {act.title}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {act.subtitle} • {formatDate(act.timestamp)}
-                    </div>
+                  <div className="activity-meta">
+                    <span className="activity-title">{act.title}</span>
+                    <span className="activity-sub">
+                      {act.subtitle} · {formatDate(act.timestamp)}
+                    </span>
                   </div>
                 </div>
 
-                {/* Right: Badge & Impact */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span
-                    style={{
-                      fontWeight: 800,
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.95rem',
-                      color: act.creditDelta >= 0 ? 'var(--primary)' : 'var(--accent-gold)',
-                    }}
-                  >
+                <div className="activity-right">
+                  <span className={`activity-delta ${act.creditDelta >= 0 ? 'plus' : 'minus'}`}>
                     {act.badgeLabel}
                   </span>
-                  {getStatusBadge(act.status)}
+                  <span className={`status-pill ${act.status}`}>
+                    {act.status}
+                  </span>
                 </div>
               </div>
             ))}
 
-            {/* Pagination / Load More */}
             {filteredActivities.length > visibleCount && (
-              <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                >
-                  Load More Activity ({filteredActivities.length - visibleCount} remaining)
-                </Button>
-              </div>
+              <button
+                type="button"
+                className="btn"
+                style={{
+                  background: 'var(--panel2)',
+                  color: 'var(--ink)',
+                  alignSelf: 'center',
+                  marginTop: '8px',
+                }}
+                onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              >
+                Load more activity ({filteredActivities.length - visibleCount} remaining)
+              </button>
             )}
           </div>
         )}
-      </Card>
+      </div>
 
-      {/* 5. Account Security Information (Read-Only) */}
-      <Card variant="default" header={<span>SECURITY & CREDENTIALS</span>}>
-        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          <p style={{ margin: 0 }}>
-            Time2Earn utilizes secure, staff-assisted credential recovery to safeguard your account against unauthorized access.
-            If you need to change your password or verify account credentials, please visit the shop counter and present your username to staff.
-          </p>
+      {/* 6. Security & Credentials Box */}
+      <div className="profile-panel">
+        <div className="panel-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ArcadeIcon name="shield" size={22} style={{ color: 'var(--v)' }} />
+            <h2 className="panel-title">Security & credentials</h2>
+          </div>
         </div>
-      </Card>
+        <p style={{ margin: 0, fontSize: '15px', color: 'var(--mute)', lineHeight: 1.5 }}>
+          Time2Earn uses secure, staff-assisted credential recovery to safeguard your tokens and rank against unauthorized access. If you need to change your password or verify account credentials, please visit the shop counter and present your username to staff.
+        </p>
+      </div>
 
-      {/* 6. PWA & Mobile Access */}
-      <Card variant="default" header={<span>APP INSTALLATION & DESK QR</span>}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <div>
-              <div style={{ fontWeight: 800 }}>Mobile PWA App Experience</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                {isInstalled
-                  ? 'Running as installed standalone application.'
-                  : 'Install Time2Earn to your device home screen for 1-tap instant access.'}
+      {/* 7. App Installation & QR */}
+      <div className="profile-panel">
+        <div className="panel-header">
+          <h2 className="panel-title">App installation & desk QR</h2>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <Link to="/qr" style={{ textDecoration: 'none' }}>
+              <button
+                type="button"
+                className="btn"
+                style={{ background: 'var(--panel2)', color: 'var(--ink)' }}
+              >
+                Shop desk QR
+              </button>
+            </Link>
+            {isInstallable && !isInstalled && (
+              <button
+                type="button"
+                className="btn"
+                style={{ background: 'var(--y)' }}
+                onClick={handleInstallApp}
+              >
+                Install app
+              </button>
+            )}
+          </div>
+        </div>
+        <p style={{ margin: 0, fontSize: '15px', color: 'var(--mute)' }}>
+          {isInstalled
+            ? 'Running as installed standalone application.'
+            : 'Install Time2Earn to your device home screen for 1-tap instant access at your gaming station.'}
+        </p>
+      </div>
+
+      {/* Pay Debt with Tokens Modal */}
+      {isDebtModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsDebtModalOpen(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2>Pay debt with tokens</h2>
+            <form onSubmit={handleSubmitDebtPayment} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="modal-summary">
+                <div className="modal-row">
+                  <span>Current shop debt</span>
+                  <b style={{ color: 'var(--r)' }}>₱{debt?.amount.toFixed(2)}</b>
+                </div>
+                <div className="modal-row">
+                  <span>Your token balance</span>
+                  <b style={{ color: 'var(--y)' }}>{currentUser.credits.toLocaleString()} tokens</b>
+                </div>
+                <div className="modal-row total">
+                  <span>Conversion rate</span>
+                  <b>1 token = ₱{DEBT_CREDIT_RATE}</b>
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <Link to="/qr" style={{ textDecoration: 'none' }}>
-                <Button variant="secondary" size="sm">
-                  📱 Shop Desk QR
-                </Button>
-              </Link>
-              {isInstallable && !isInstalled && (
-                <Button variant="arcade" size="sm" onClick={handleInstallApp}>
-                  ⚡ Install App
-                </Button>
-              )}
-            </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: 'var(--mute)', marginBottom: '6px' }}>
+                  Tokens to use
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max={currentUser.credits}
+                  required
+                  value={creditsToUse}
+                  onChange={(e) => setCreditsToUse(Math.max(1, Number(e.target.value)))}
+                  className="field"
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div className="modal-summary">
+                <div className="modal-row">
+                  <span>Debt relief preview</span>
+                  <b style={{ color: 'var(--g)' }}>₱{calculateDebtPaymentPhp(creditsToUse).toFixed(2)}</b>
+                </div>
+                <div className="modal-row total">
+                  <span>Remaining debt</span>
+                  <b>₱{Math.max(0, (debt?.amount || 0) - calculateDebtPaymentPhp(creditsToUse)).toFixed(2)}</b>
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ background: 'var(--panel2)', color: 'var(--ink)' }}
+                  onClick={() => setIsDebtModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn"
+                  style={{ background: 'var(--g)' }}
+                  disabled={isSubmittingDebt}
+                >
+                  {isSubmittingDebt ? 'Submitting...' : 'Submit payment request'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </Card>
-
-      {/* Pay Debt with Credits Modal */}
-      <Modal
-        isOpen={isDebtModalOpen}
-        onClose={() => setIsDebtModalOpen(false)}
-        title="PAY DEBT WITH CREDITS"
-        size="md"
-      >
-        <form onSubmit={handleSubmitDebtPayment} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ backgroundColor: 'var(--bg-elevated)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Current Shop Debt:</span>
-              <strong style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>
-                ₱{debt?.amount.toFixed(2)}
-              </strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Your Available Balance:</span>
-              <strong style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                {currentUser.credits.toLocaleString()} CR
-              </strong>
-            </div>
-          </div>
-
-          <div style={{ padding: '0.65rem 0.85rem', backgroundColor: 'rgba(0, 229, 255, 0.08)', borderRadius: 'var(--radius-xs)', fontSize: '0.8rem', color: 'var(--primary)' }}>
-            💡 Conversion Rate: <strong>1 Credit = ₱0.40 debt relief</strong> (₱{DEBT_CREDIT_RATE} / credit).
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-              CREDITS TO USE *
-            </label>
-            <input
-              type="number"
-              min="1"
-              max={currentUser.credits}
-              required
-              value={creditsToUse}
-              onChange={(e) => setCreditsToUse(Math.max(1, Number(e.target.value)))}
-              style={{
-                width: '100%',
-                padding: '0.65rem 0.85rem',
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border-medium)',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--text-primary)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '1.1rem',
-              }}
-            />
-          </div>
-
-          {/* Dynamic Calculation Preview */}
-          <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.4)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-xs)', fontSize: '0.85rem' }}>
-            <div>
-              Debt Relief Preview:{' '}
-              <strong style={{ color: 'var(--success)', fontFamily: 'var(--font-mono)' }}>
-                ₱{calculateDebtPaymentPhp(creditsToUse).toFixed(2)}
-              </strong>
-            </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.2rem' }}>
-              Remaining Debt After Payment:{' '}
-              <span style={{ fontFamily: 'var(--font-mono)' }}>
-                ₱{Math.max(0, (debt?.amount || 0) - calculateDebtPaymentPhp(creditsToUse)).toFixed(2)}
-              </span>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
-            <Button type="button" variant="ghost" onClick={() => setIsDebtModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" isLoading={isSubmittingDebt}>
-              Submit Payment Request
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      )}
     </div>
   );
 };

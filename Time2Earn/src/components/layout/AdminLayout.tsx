@@ -8,14 +8,12 @@ export const AdminLayout: React.FC = () => {
   return (
     <div className="admin-shell">
       <Sidebar isAdmin={true} />
-      <div className="shell-main">
+      <main className="app-main">
         <Header isAdmin={true} />
-        <main className="shell-content admin-content">
-          <div className="container">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+        <div className="pad">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 };

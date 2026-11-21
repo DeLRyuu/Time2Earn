@@ -1,45 +1,38 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { ProgressBar } from '../../components/ui/ProgressBar';
-import { Badge } from '../../components/ui/Badge';
-import { RankBadge } from '../../components/ui/RankBadge';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { EmptyState } from '../../components/ui/EmptyState';
-import { Modal } from '../../components/ui/Modal';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { ArcadeIcon } from '../../components/ui/ArcadeIcon';
 import { RankUpCelebrationModal } from '../../components/common/RankUpCelebrationModal';
-import { GainFeedback, type GainFeedbackItem } from '../../components/common/GainFeedback';
 import { useAuth } from '../../hooks/useAuth';
 import { useConfig } from '../../hooks/useConfig';
 import { useToast } from '../../hooks/useToast';
-import { usePlayerDashboard } from '../../hooks/usePlayerDashboard';
 import { calculateRankProgress } from '../../lib/ranks';
-import { calculateCreditPreview, calculateAwardedCredits, calculateAwardedExp } from '../../lib/credits';
+import { calculateCreditPreview } from '../../lib/credits';
 import { submitSessionRequest, fetchPlayerSessions } from '../../services/sessionService';
+import { BACKUP_REWARDS } from '../../services/redemptionService';
 import type { SessionRequest } from '../../types/session';
-import { Link } from 'react-router-dom';
+import './Home.css';
 
 const POPULAR_UNITS = ['PC-01', 'PC-02', 'PC-03', 'PC-04', 'PC-05', 'PC-06', 'PC-07', 'PC-08', 'PC-09', 'PC-10'];
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export const Home: React.FC = () => {
   const { user } = useAuth();
-  const { config, loading: configLoading } = useConfig();
+  const { config } = useConfig();
   const { showToast } = useToast();
-  const { featuredRewards, loading: dashLoading } = usePlayerDashboard();
 
-  // Session Request Modal & Form State
-  const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
-  const [selectedUnit, setSelectedUnit] = useState('PC-01');
-  const [amountPaidInput, setAmountPaidInput] = useState<number>(20);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Insert Coin State
+  const [pesosInput, setPesosInput] = useState<string>('');
+  const [selectedUnit, setSelectedUnit] = useState<string>('PC-01');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [coinDropping, setCoinDropping] = useState<boolean>(false);
+  const dropTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Player's Session History State
+  // Player's Session History (for pending claims counter)
   const [playerSessions, setPlayerSessions] = useState<SessionRequest[]>([]);
-  const [sessionsLoading, setSessionsLoading] = useState(true);
 
-  // Gamification & Polish States
+  // Gamification Rank Up State
   const [isCelebrationOpen, setIsCelebrationOpen] = useState(false);
-  const [gainItems, setGainItems] = useState<GainFeedbackItem[]>([]);
 
   // Fallback demo user if not logged in
   const currentUser = user || {
@@ -54,63 +47,73 @@ export const Home: React.FC = () => {
     isRestricted: false,
   };
 
-  const loadSessions = useCallback(async () => {
-    setSessionsLoading(true);
-    try {
-      const data = await fetchPlayerSessions(currentUser.uid);
-      setPlayerSessions(data);
-    } catch (err) {
-      console.warn('Error fetching session history:', err);
-    } finally {
-      setSessionsLoading(false);
-    }
-  }, [currentUser.uid]);
-
+  // Load session requests to monitor pending claims
   useEffect(() => {
     let isMounted = true;
-    const fetchInitial = async () => {
+    const loadInitial = async () => {
       try {
         const data = await fetchPlayerSessions(currentUser.uid);
         if (isMounted) setPlayerSessions(data);
       } catch (err) {
-        console.warn('Error fetching session history:', err);
-      } finally {
-        if (isMounted) setSessionsLoading(false);
+        console.warn('Could not fetch sessions:', err);
       }
     };
-    fetchInitial();
+    loadInitial();
     return () => {
       isMounted = false;
+      if (dropTimerRef.current) clearTimeout(dropTimerRef.current);
     };
   }, [currentUser.uid]);
 
-  // Dynamic preview calculations from config
-  const creditPreview = calculateCreditPreview(amountPaidInput, config.phpToCreditRate);
-  const creditsAward = calculateAwardedCredits(amountPaidInput, config.phpToCreditRate);
-  const expAward = calculateAwardedExp(creditsAward);
-  const rankProgress = calculateRankProgress(currentUser.exp, config.rankThresholds);
+  const pendingCount = useMemo(() => {
+    return playerSessions.filter((s) => s.status === 'pending').length;
+  }, [playerSessions]);
 
-  // Check once on load/rank update if rank celebration should be shown
-  useEffect(() => {
-    let active = true;
-    const timer = setTimeout(() => {
-      if (rankProgress.currentRank && currentUser.uid && active) {
-        const storageKey = `t2e_last_celebrated_rank_${currentUser.uid}`;
-        const lastCelebrated = localStorage.getItem(storageKey);
-        if (!lastCelebrated) {
-          if (rankProgress.currentRank !== 'Newbie') {
-            setIsCelebrationOpen(true);
-          }
-        } else if (lastCelebrated !== rankProgress.currentRank) {
-          setIsCelebrationOpen(true);
-        }
-      }
-    }, 150);
+  // Rank Progress calculation
+  const rankProgress = useMemo(() => {
+    return calculateRankProgress(currentUser.exp, config.rankThresholds);
+  }, [currentUser.exp, config.rankThresholds]);
 
-    return () => {
-      active = false;
-      clearTimeout(timer);
+  // Rank span calculations for segmented bar
+  const { currentRank, nextRank, expToNextRank, currentThreshold, nextThreshold, progressInRank, rankSpan, progressPct } = useMemo(() => {
+    const thresholds = config.rankThresholds;
+    const curRank = rankProgress.currentRank;
+    const nxtRank = rankProgress.nextRank || curRank;
+    const curThresh = thresholds[curRank] ?? 0;
+    const nxtThresh = thresholds[nxtRank] ?? curThresh;
+    const span = Math.max(1, nxtThresh - curThresh);
+    const inRank = Math.max(0, currentUser.exp - curThresh);
+    const pct = Math.min(100, Math.max(0, Math.round((inRank / span) * 100)));
+
+    return {
+      currentRank: curRank,
+      nextRank: nxtRank,
+      expToNextRank: rankProgress.expRemaining,
+      currentThreshold: curThresh,
+      nextThreshold: nxtThresh,
+      progressInRank: inRank,
+      rankSpan: span,
+      progressPct: pct,
     };
+  }, [currentUser.exp, config.rankThresholds, rankProgress]);
+
+  // Rank-Up Celebration Modal Trigger
+  useEffect(() => {
+    if (rankProgress.currentRank && currentUser.uid) {
+      const storageKey = `t2e_last_celebrated_rank_${currentUser.uid}`;
+      const lastCelebrated = localStorage.getItem(storageKey);
+      let timer: ReturnType<typeof setTimeout> | null = null;
+      if (!lastCelebrated) {
+        if (rankProgress.currentRank !== 'Newbie') {
+          timer = setTimeout(() => setIsCelebrationOpen(true), 150);
+        }
+      } else if (lastCelebrated !== rankProgress.currentRank) {
+        timer = setTimeout(() => setIsCelebrationOpen(true), 150);
+      }
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
+    }
   }, [rankProgress.currentRank, currentUser.uid]);
 
   const handleDismissCelebration = () => {
@@ -120,487 +123,245 @@ export const Home: React.FC = () => {
     setIsCelebrationOpen(false);
   };
 
-  const handleSubmitSession = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (amountPaidInput <= 0) {
-      showToast('Amount paid must be greater than ₱0.', 'warning');
-      return;
+  // Insert Coin calculation
+  const numPesos = Math.floor(Number(pesosInput) || 0);
+  const conversionRate = config.phpToCreditRate || 1;
+  const previewTokens = Math.floor(calculateCreditPreview(numPesos, conversionRate));
+  const canInsert = numPesos >= 1 && previewTokens >= 1;
+
+  const validationMsg = useMemo(() => {
+    if (numPesos > 0 && previewTokens < 1) {
+      return 'Insert at least ₱1.';
     }
+    return '';
+  }, [numPesos, previewTokens]);
+
+  const handleQuickAmount = (amt: number) => {
+    setPesosInput(String(amt));
+  };
+
+  const handleInsertCoin = async () => {
+    if (!canInsert || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
+      // 1. Submit session request via server-authoritative service
       await submitSessionRequest({
         userId: currentUser.uid,
         username: currentUser.username,
         unitId: selectedUnit,
-        amountPaid: Number(amountPaidInput),
-        phpToCreditRate: config.phpToCreditRate,
+        amountPaid: numPesos,
+        phpToCreditRate: conversionRate,
       });
 
-      // Trigger floating gain feedback
-      setGainItems([
-        { id: `c-${Date.now()}`, type: 'credits', amount: Math.floor(creditPreview) },
-        { id: `e-${Date.now() + 1}`, type: 'exp', amount: expAward },
-      ]);
+      // 2. Trigger coin drop animation
+      setCoinDropping(false);
+      // Force repaint to re-trigger css keyframe
+      requestAnimationFrame(() => {
+        setCoinDropping(true);
+        dropTimerRef.current = setTimeout(() => {
+          setCoinDropping(false);
+        }, 700);
+      });
 
-      showToast(`Session claim submitted for ${selectedUnit}! Awaiting staff approval.`, 'success');
-      setIsSessionModalOpen(false);
-      await loadSessions();
+      // 3. Feedback toast
+      showToast(
+        `Coin accepted! +${previewTokens} ${previewTokens > 1 ? 'tokens' : 'token'} (Claim pending staff approval for ${selectedUnit})`,
+        'success'
+      );
+
+      // 4. Reset input and refresh session queue
+      setPesosInput('');
+      const updated = await fetchPlayerSessions(currentUser.uid);
+      setPlayerSessions(updated);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Failed to submit claim.', 'error');
+      showToast(err instanceof Error ? err.message : 'Failed to insert coins.', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Streak calculations (Mon to Sun row)
+  const streakCount = currentUser.streak ?? 1;
+  const streakIndex = (streakCount - 1) % 7;
+  const nextDayName = DAY_NAMES[(streakIndex + 1) % 7];
+
+  // Dynamic count of claimable prizes
+  const claimableCount = useMemo(() => {
+    const tokens = currentUser.credits ?? 0;
+    return BACKUP_REWARDS.filter((r) => r.isActive && r.creditCost <= tokens).length;
+  }, [currentUser.credits]);
+
   return (
-    <div className="dashboard-page" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* 1. Header: Welcome message */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '0.02em', color: 'var(--text-primary)' }}>
-            Welcome back, <span style={{ color: 'var(--primary)', textShadow: '0 0 10px var(--primary-glow)' }}>{currentUser.username}</span>
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Ready to grind? Play. Earn. Rank Up. Redeem.
+    <div className="home-view">
+      {/* 1. Welcome Panel (Card: Hero + Streak) */}
+      <section className="card hero" aria-label="Player Overview">
+        <div className="av" aria-hidden="true">
+          <ArcadeIcon name="pad" />
+        </div>
+
+        <div className="grow">
+          <h1>Welcome back, {currentUser.username}</h1>
+          <p className="m">
+            You’re a {currentRank}. Earn {expToNextRank.toLocaleString()} more EXP to unlock {nextRank}.
           </p>
+
+          <div
+            className="bar"
+            style={{ marginTop: '16px' }}
+            role="progressbar"
+            aria-valuenow={progressPct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Progress to ${nextRank}`}
+          >
+            <i style={{ width: `${progressPct}%` }} />
+          </div>
+
+          <div className="lv">
+            <span>{currentRank} · {currentThreshold.toLocaleString()}</span>
+            <span className="m">
+              {progressInRank.toLocaleString()} / {rankSpan.toLocaleString()} to {nextRank}
+            </span>
+            <span>{nextRank} · {nextThreshold.toLocaleString()}</span>
+          </div>
         </div>
-        <Badge variant={currentUser.isRestricted ? 'danger' : 'success'} size="sm">
-          {currentUser.isRestricted ? 'ACCOUNT FROZEN' : 'ACTIVE STATUS'}
-        </Badge>
-      </div>
 
-      {/* 2. Stat Cards (Credits, Rank, EXP, Streak) - Visually Distinct */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.85rem', width: '100%' }}>
-        {/* Credits Stat Card */}
-        <Card
-          variant="neon"
-          style={{
-            background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(0, 229, 255, 0.05) 100%)',
-            border: '1px solid rgba(0, 229, 255, 0.35)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>CREDITS</span>
-            <span style={{ fontSize: '1.2rem' }}>💰</span>
+        {/* Streak box on the right */}
+        <div className="streak">
+          <div className="sk">
+            <ArcadeIcon name="fire" />
+            <span className="d">{streakCount}</span>
+            <span>day streak</span>
           </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 900, color: 'var(--primary)', fontFamily: 'var(--font-mono)', marginTop: '0.35rem' }}>
-            {currentUser.credits.toLocaleString()}
-          </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--primary)', marginTop: '0.2rem', opacity: 0.85 }}>Spendable Loot</div>
-        </Card>
 
-        {/* Rank Stat Card */}
-        <Card
-          variant="gold"
-          style={{
-            background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(255, 183, 3, 0.05) 100%)',
-            border: '1px solid rgba(255, 183, 3, 0.35)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>RANK</span>
-            <span style={{ fontSize: '1.2rem' }}>🏆</span>
+          <div className="days" aria-label="Streak Days">
+            {WEEKDAYS.map((day, idx) => {
+              const isHit = idx <= streakIndex;
+              const isNext = idx === (streakIndex + 1) % 7;
+              const cls = isHit ? 'hit' : isNext ? 'next' : '';
+              return (
+                <span key={day} className={cls} title={`${day}: ${isHit ? 'Completed' : isNext ? 'Next goal' : 'Upcoming'}`}>
+                  {day}
+                </span>
+              );
+            })}
           </div>
-          <div style={{ marginTop: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <RankBadge rank={currentUser.rank} size="md" />
-          </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', marginTop: '0.35rem', opacity: 0.85 }}>
-            {rankProgress.isMaxRank ? 'Peak Legend' : `Tier ${rankProgress.currentThreshold.toLocaleString()} EXP`}
-          </div>
-        </Card>
 
-        {/* EXP Stat Card */}
-        <Card
-          variant="interactive"
-          style={{
-            background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(139, 92, 246, 0.05) 100%)',
-            border: '1px solid rgba(139, 92, 246, 0.35)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>EXP</span>
-            <span style={{ fontSize: '1.2rem' }}>⭐</span>
-          </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 900, color: 'var(--secondary)', fontFamily: 'var(--font-mono)', marginTop: '0.35rem' }}>
-            {currentUser.exp.toLocaleString()}
-          </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--secondary)', marginTop: '0.2rem', opacity: 0.85 }}>
-            {rankProgress.isMaxRank ? 'Max Tier Achieved' : `${rankProgress.expRemaining.toLocaleString()} to ${rankProgress.nextRank}`}
-          </div>
-        </Card>
+          <p className="m">Check in {nextDayName} to reach {streakCount + 1}.</p>
+        </div>
+      </section>
 
-        {/* Streak Stat Card */}
-        <Card
-          variant="interactive"
-          style={{
-            background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(245, 158, 11, 0.05) 100%)',
-            border: '1px solid rgba(245, 158, 11, 0.35)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>STREAK</span>
-            <span style={{ fontSize: '1.2rem' }}>🔥</span>
-          </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 900, color: 'var(--warning)', fontFamily: 'var(--font-mono)', marginTop: '0.35rem' }}>
-            {currentUser.streak ?? 1} <span style={{ fontSize: '1rem', fontWeight: 700 }}>days</span>
-          </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--warning)', marginTop: '0.2rem', opacity: 0.85 }}>Daily check-in active</div>
-        </Card>
-      </div>
+      {/* 2. Insert Coin Panel */}
+      <section className="card coin" aria-labelledby="ct">
+        <div>
+          <h2 id="ct">Insert Coin</h2>
+          <p className="m">Drop your coins in the slot to load tokens.</p>
 
-      {/* 3. Rank Progression Progress Bar */}
-      <Card
-        variant="default"
-        header={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.05em' }}>RANK PROGRESSION</span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              {rankProgress.isMaxRank ? 'OG TOP RANK' : `${currentUser.exp.toLocaleString()} / ${rankProgress.nextThreshold?.toLocaleString()} EXP`}
+          <div className="slot">
+            <span className={`cdrop ${coinDropping ? 'go' : ''}`} id="cdrop" aria-hidden="true">
+              <ArcadeIcon name="coin" />
             </span>
           </div>
-        }
-      >
-        {configLoading ? (
-          <Skeleton height="24px" />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <RankBadge rank={rankProgress.currentRank} size="sm" />
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>current rank</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>next rank:</span>
-                {rankProgress.isMaxRank ? (
-                  <Badge variant="primary" size="sm">MAX REACHED</Badge>
-                ) : (
-                  <RankBadge rank={rankProgress.nextRank || 'Unknown'} size="sm" />
-                )}
-              </div>
-            </div>
 
-            <ProgressBar value={rankProgress.progressPercent} max={100} variant="purple" size="md" showPercentage />
-
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <span>
-                {rankProgress.isMaxRank
-                  ? '⭐ Congratulations! You have reached the pinnacle OG Player tier.'
-                  : `⚡ Only ${rankProgress.expRemaining.toLocaleString()} EXP needed to reach ${rankProgress.nextRank}!`}
-              </span>
-              <button
-                onClick={() => setIsCelebrationOpen(true)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--accent-gold)',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  textDecoration: 'underline',
-                  padding: 0,
-                }}
-              >
-                🎉 View Celebration
-              </button>
-            </div>
-          </div>
-        )}
-      </Card>
-
-      {/* 4. Quick Actions Hub */}
-      <div>
-        <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
-          QUICK ACTIONS
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem' }}>
-          <Button variant="primary" size="md" onClick={() => setIsSessionModalOpen(true)} style={{ width: '100%', minHeight: '48px' }}>
-            🎮 Play & Earn
-          </Button>
-          <Link to="/player/rewards" style={{ textDecoration: 'none' }}>
-            <Button variant="secondary" size="md" style={{ width: '100%', minHeight: '48px' }}>
-              🎁 Rewards
-            </Button>
-          </Link>
-          <Link to="/player/arcade" style={{ textDecoration: 'none' }}>
-            <Button variant="arcade" size="md" style={{ width: '100%', minHeight: '48px' }}>
-              🕹️ Arcade
-            </Button>
-          </Link>
-          <Link to="/player/leaderboard" style={{ textDecoration: 'none' }}>
-            <Button variant="accent" size="md" style={{ width: '100%', minHeight: '48px' }}>
-              🏆 Rankings
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* 5. Player's Session Request History (Phase 5 Feature) */}
-      <Card
-        variant="default"
-        header={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.05em' }}>
-              MY GAMING SESSION REQUESTS
-            </span>
-            <Button variant="ghost" size="sm" onClick={loadSessions}>
-              Refresh
-            </Button>
-          </div>
-        }
-      >
-        {sessionsLoading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <Skeleton height="45px" />
-            <Skeleton height="45px" />
-          </div>
-        ) : playerSessions.length === 0 ? (
-          <EmptyState
-            icon={<span>🎮</span>}
-            title="NO SESSIONS SUBMITTED YET"
-            description="Play at any shop station, submit your paid amount, and earn Credits & EXP upon staff approval!"
-            actionText="Claim a Session Now"
-            onAction={() => setIsSessionModalOpen(true)}
+          <label htmlFor="ci" className="m" style={{ display: 'block', margin: '16px 0 6px' }}>
+            Pesos to insert
+          </label>
+          <input
+            id="ci"
+            className="field"
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            placeholder="0"
+            value={pesosInput}
+            onChange={(e) => setPesosInput(e.target.value)}
           />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            {playerSessions.map((session) => (
-              <div
-                key={session.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.75rem 0.85rem',
-                  background: 'var(--bg-elevated)',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-subtle)',
-                  flexWrap: 'wrap',
-                  gap: '0.5rem',
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                      Station {session.unitId}
-                    </span>
-                    <Badge
-                      variant={
-                        session.status === 'approved'
-                          ? 'success'
-                          : session.status === 'rejected'
-                          ? 'danger'
-                          : 'warning'
-                      }
-                      size="sm"
-                    >
-                      {session.status}
-                    </Badge>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                    Paid ₱{session.amountPaid.toFixed(2)} • {new Date(session.requestedAt).toLocaleString()}
-                    {session.rejectNote && (
-                      <span style={{ color: 'var(--danger)', marginLeft: '0.5rem' }}>
-                        (Reason: {session.rejectNote})
-                      </span>
-                    )}
-                  </div>
-                </div>
 
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                    +{Math.floor(session.creditsEarned)} CR
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--secondary)' }}>
-                    +{Math.floor(session.creditsEarned)} EXP
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="qs">
+            <button type="button" onClick={() => handleQuickAmount(20)}>₱20</button>
+            <button type="button" onClick={() => handleQuickAmount(50)}>₱50</button>
+            <button type="button" onClick={() => handleQuickAmount(100)}>₱100</button>
+            <button type="button" onClick={() => handleQuickAmount(200)}>₱200</button>
           </div>
-        )}
-      </Card>
 
-      {/* 6. Featured Active Rewards */}
-      <Card
-        variant="default"
-        header={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.05em' }}>
-              FEATURED ACTIVE REWARDS
-            </span>
-            <Link to="/player/rewards" style={{ color: 'var(--primary)', fontSize: '0.75rem', fontWeight: 700 }}>
-              VIEW ALL $\rightarrow$
-            </Link>
-          </div>
-        }
-      >
-        {dashLoading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' }}>
-            <Skeleton height="110px" />
-            <Skeleton height="110px" />
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-            {featuredRewards.slice(0, 3).map((reward) => (
-              <div
-                key={reward.id}
-                style={{
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '0.85rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '0.5rem',
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                      {reward.name}
-                    </span>
-                    <Badge variant="primary" size="sm">{reward.category}</Badge>
-                  </div>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem', lineHeight: 1.3 }}>
-                    {reward.description}
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                  <div>
-                    <span style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-                      {reward.creditCost} CR
-                    </span>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--secondary)' }}>
-                      +{reward.expReward} EXP
-                    </div>
-                  </div>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => showToast(`Redemption queue connects in Phase 6. Required: ${reward.creditCost} CR`, 'info')}
-                  >
-                    Redeem
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      {/* Play & Earn Session Claim Modal */}
-      <Modal
-        isOpen={isSessionModalOpen}
-        onClose={() => setIsSessionModalOpen(false)}
-        title="CLAIM GAMING SESSION"
-        size="md"
-      >
-        <form onSubmit={handleSubmitSession} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-              SELECT PC STATION / UNIT ID
-            </label>
-            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-              {POPULAR_UNITS.slice(0, 5).map((u) => (
-                <Badge
-                  key={u}
-                  variant={selectedUnit === u ? 'primary' : 'neutral'}
-                  style={{ cursor: 'pointer', padding: '0.4rem 0.65rem' }}
-                  onClick={() => setSelectedUnit(u)}
-                >
-                  {u}
-                </Badge>
-              ))}
-            </div>
-            <input
-              type="text"
+          <div className="unit-row">
+            <label htmlFor="unit-select" className="m" style={{ fontSize: '14px' }}>PC Unit:</label>
+            <select
+              id="unit-select"
+              className="unit-select"
               value={selectedUnit}
               onChange={(e) => setSelectedUnit(e.target.value)}
-              placeholder="e.g. PC-01"
-              required
-              style={{
-                width: '100%',
-                padding: '0.65rem 0.85rem',
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border-medium)',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--text-primary)',
-                fontFamily: 'var(--font-mono)',
-              }}
-            />
+            >
+              {POPULAR_UNITS.map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="out">
+          <p className="m">You’ll get</p>
+          <div className="tkrow">
+            <span className="tk" aria-hidden="true">
+              <ArcadeIcon name="pad" />
+            </span>
+            <span className="d" style={{ fontSize: '52px' }}>
+              <span id="prev">{previewTokens}</span> tokens
+            </span>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-              AMOUNT PAID (PHP)
-            </label>
-            <input
-              type="number"
-              min="1"
-              step="any"
-              value={amountPaidInput}
-              onChange={(e) => setAmountPaidInput(Math.max(0, Number(e.target.value)))}
-              required
-              style={{
-                width: '100%',
-                padding: '0.65rem 0.85rem',
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border-medium)',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--text-primary)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '1.1rem',
-                fontWeight: 700,
-              }}
-            />
-          </div>
+          <p className="m">₱1 = {conversionRate} tokens</p>
+          <p id="cmsg" className="need" aria-live="polite">
+            {validationMsg}
+          </p>
 
-          {/* Dynamic Credit Preview */}
-          <div
-            style={{
-              padding: '0.85rem',
-              background: 'var(--bg-app)',
-              border: '1px solid var(--primary-glow)',
-              borderRadius: 'var(--radius-sm)',
-            }}
+          <button
+            className="btn"
+            id="cgo"
+            disabled={!canInsert || isSubmitting}
+            onClick={handleInsertCoin}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Conversion Rate:</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--primary)' }}>
-                {config.phpToCreditRate} Credits / ₱1.00
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.35rem' }}>
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>Estimated Reward:</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.2rem', fontWeight: 900, color: 'var(--primary)' }}>
-                {creditPreview.toFixed(2)} Credits
-              </span>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', textAlign: 'right', marginTop: '0.2rem' }}>
-              +{creditsAward} Spendable Credits & +{expAward} EXP on approval
-            </div>
-          </div>
+            {isSubmitting ? 'Inserting...' : 'Insert coin'}
+          </button>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
-            <Button type="button" variant="ghost" onClick={() => setIsSessionModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" isLoading={isSubmitting}>
-              Submit Request
-            </Button>
-          </div>
-        </form>
-      </Modal>
-      {/* 9. Floating Gain Feedback */}
-      <GainFeedback
-        items={gainItems}
-        onDismiss={(id) => setGainItems((prev) => prev.filter((i) => i.id !== id))}
-      />
+          <p className="m">
+            Token balance: <b id="tk2">{currentUser.credits.toLocaleString()}</b>
+          </p>
 
-      {/* 10. Rank-Up Celebration Modal */}
+          {pendingCount > 0 && (
+            <p className="m" style={{ color: 'var(--y)', fontSize: '13px' }}>
+              {pendingCount} claim(s) awaiting staff approval
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* 3. Two Big Tiles (Arcade Zone & Prize Shop) */}
+      <div className="tiles">
+        <Link to="/player/arcade" className="tile a" aria-label="Go to Arcade Zone">
+          <ArcadeIcon name="joy" className="bg" />
+          <span className="badge" style={{ background: 'var(--on)', color: 'var(--y)' }}>
+            1 game open
+          </span>
+          <h2>Arcade Zone</h2>
+          <p>Jump in, score big, earn EXP.</p>
+          <span className="go">Play now</span>
+        </Link>
+
+        <Link to="/player/rewards" className="tile s" aria-label="Go to Prize Shop">
+          <ArcadeIcon name="gift" className="bg" />
+          <span className="badge" style={{ background: 'var(--on)', color: 'var(--r)' }}>
+            {claimableCount} prizes ready
+          </span>
+          <h2>Prize Shop</h2>
+          <p>You have {currentUser.credits.toLocaleString()} tokens to spend.</p>
+          <span className="go">Pick a prize</span>
+        </Link>
+      </div>
+
+      {/* Rank Up Promotion Modal */}
       <RankUpCelebrationModal
         isOpen={isCelebrationOpen}
         onClose={handleDismissCelebration}
