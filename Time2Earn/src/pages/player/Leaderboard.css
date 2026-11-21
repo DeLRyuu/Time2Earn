@@ -5,7 +5,7 @@
 .rankings-view {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 /* Header & Timer */
@@ -14,12 +14,12 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 
 .rankings-head h1 {
   font-family: 'Lilita One', Impact, sans-serif;
-  font-size: clamp(30px, 4vw, 42px);
+  font-size: clamp(24px, 3.2vw, 34px);
   margin: 0;
   line-height: 1.1;
   color: var(--ink);
@@ -27,66 +27,68 @@
 
 .rankings-sub {
   color: var(--mute);
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
-  margin: 6px 0 0 0;
+  margin: 3px 0 0 0;
 }
 
 .timer {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--panel);
   border: 3px solid var(--line);
-  border-radius: 16px;
-  padding: 8px 16px;
+  border-radius: 14px;
+  padding: 6px 14px;
   box-shadow: 0 4px 0 var(--line);
 }
 
 .timer svg {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   color: var(--y);
 }
 
 .timer .m {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--mute);
 }
 
 .timer b {
   font-family: 'Lilita One', Impact, sans-serif;
-  font-size: 26px;
+  font-size: 20px;
   color: var(--y);
 }
 
-/* Motivation Chase Banner */
+/* Motivation Chase Banner (Yellow) */
 .card.chase {
-  background: var(--r);
+  background: var(--y);
   color: var(--on);
   border: 3px solid var(--line);
-  border-radius: 20px;
-  box-shadow: 0 6px 0 var(--line);
-  padding: 24px;
+  border-radius: 18px;
+  box-shadow: 0 5px 0 var(--line);
+  padding: 16px 20px;
 }
 
 .chase .d {
   font-family: 'Lilita One', Impact, sans-serif;
-  font-size: 30px;
+  font-size: 24px;
   line-height: 1.15;
+  color: var(--on);
 }
 
 .chase p {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 700;
-  margin: 6px 0 0 0;
+  margin: 3px 0 0 0;
+  color: var(--on);
 }
 
 .chase .bar {
-  background: rgba(20, 23, 58, 0.35);
-  margin-top: 14px;
-  height: 14px;
+  background: rgba(20, 23, 58, 0.2);
+  margin-top: 10px;
+  height: 12px;
   border: 2px solid var(--line);
   border-radius: 99px;
   overflow: hidden;
@@ -95,151 +97,391 @@
 .chase .bar i {
   height: 100%;
   border-radius: 99px;
-  background: repeating-linear-gradient(90deg, var(--on) 0 14px, transparent 14px 17px);
+  background: var(--on);
   display: block;
   transition: width 0.3s ease;
 }
 
-/* Two Columns: Left Podium, Right List */
+/* Two Columns: Left Top 3 Podium (1.1fr), Right Standings (1fr) */
 .rk {
   display: grid;
-  grid-template-columns: minmax(300px, 400px) 1fr;
-  gap: 28px;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 20px;
   align-items: start;
 }
 
-@media (max-width: 900px) {
-  .rk {
-    grid-template-columns: 1fr;
+/* Podium Entrance & Hover */
+@keyframes podEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Podium */
 .pod {
-  display: grid;
-  gap: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.card.p1 {
-  background: var(--y);
+/* Top 3 Cards Shared Styling: 4px outline, 0 8px 0 shadow */
+.card.p1,
+.card.p2,
+.card.p3 {
+  position: relative;
+  overflow: hidden;
+  border: 4px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 8px 0 var(--line);
   color: var(--on);
   text-align: center;
-  padding: 30px 20px;
-  border: 3px solid var(--line);
-  border-radius: 20px;
-  box-shadow: 0 6px 0 var(--line);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
-.p1 svg {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 8px;
+.card.p1:hover,
+.card.p1:focus-within,
+.card.p2:hover,
+.card.p2:focus-within,
+.card.p3:hover,
+.card.p3:focus-within {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 0 var(--line);
+}
+
+.card.p1 > *:not(.sparkle),
+.card.p2 > *,
+.card.p3 > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 1st Place Card (Gold) - Biggest */
+.card.p1 {
+  background: var(--y);
+  padding: 22px 18px;
+  animation: podEntrance 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) 300ms both;
+}
+
+/* Diagonal White Shine Across 1st Place */
+.card.p1::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -80%;
+  width: 60%;
+  height: 220%;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(25deg);
+  animation: p1Shine 3.5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes p1Shine {
+  0% {
+    transform: translateX(-160%) rotate(25deg);
+  }
+  32% {
+    transform: translateX(480%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(480%) rotate(25deg);
+  }
+}
+
+/* Crown Bobbing */
+@keyframes crownBob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.p1-crown {
+  display: inline-block;
+  animation: crownBob 2s ease-in-out infinite;
+  margin-bottom: 2px;
+}
+
+.p1-crown svg {
+  width: 52px;
+  height: 52px;
+  color: var(--on);
+}
+
+/* Sparkles Around 1st Place Card (16px absolute at edges) */
+.sparkle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  color: #ffffff;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.sparkle-1 {
+  top: 8px;
+  left: 8px;
+  animation: twinkle 2.2s ease-in-out infinite 0.2s;
+}
+
+.sparkle-2 {
+  top: 8px;
+  right: 8px;
+  animation: twinkle 2.5s ease-in-out infinite 0.8s;
+}
+
+.sparkle-3 {
+  bottom: 8px;
+  left: 8px;
+  animation: twinkle 2.1s ease-in-out infinite 1.4s;
+}
+
+.sparkle-4 {
+  bottom: 8px;
+  right: 8px;
+  animation: twinkle 2.4s ease-in-out infinite 1.9s;
 }
 
 .p1 p {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  opacity: 0.85;
+  color: var(--on);
+  opacity: 0.95;
 }
 
 .p1 .d {
   font-family: 'Lilita One', Impact, sans-serif;
-  font-size: 34px;
-  margin: 6px 0;
+  font-size: 30px;
+  margin: 2px 0 4px;
   line-height: 1.1;
   word-break: break-word;
+  color: var(--on);
 }
 
 .p1 .pt {
   font-family: 'Lilita One', Impact, sans-serif;
-  font-size: 24px;
+  font-size: 26px;
+  color: var(--on);
 }
 
+/* 2nd and 3rd Place Pair */
 .pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 14px;
 }
 
 .card.pc {
-  text-align: center;
-  padding: 20px 14px;
-  background: var(--panel);
-  border: 3px solid var(--line);
-  border-radius: 20px;
-  box-shadow: 0 6px 0 var(--line);
-  color: var(--ink);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  padding: 14px 10px;
+}
+
+/* 2nd Place (Silver) */
+.card.p2 {
+  background: #D5DAF5;
+  animation: podEntrance 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) 150ms both;
+}
+
+/* 3rd Place (Bronze) */
+.card.p3 {
+  background: #F0A15E;
+  animation: podEntrance 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) 0ms both;
+}
+
+/* Number Badges for 2nd and 3rd */
+@keyframes badgePop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .pc .n {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  margin: 0 auto 8px;
+  margin: 0 auto 4px;
   font-family: 'Lilita One', Impact, sans-serif;
-  font-size: 22px;
-  color: var(--on);
+  font-size: 18px;
+  background: var(--panel);
   border: 3px solid var(--line);
+  color: var(--on);
+}
+
+.card.p2 .n {
+  animation: badgePop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1) 700ms both;
+}
+
+.card.p3 .n {
+  animation: badgePop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1) 550ms both;
 }
 
 .pc .d {
   font-family: 'Lilita One', Impact, sans-serif;
-  font-size: 22px;
+  font-size: 18px;
   word-break: break-word;
-  margin: 4px 0;
+  margin: 2px 0 4px;
   line-height: 1.1;
+  color: var(--on);
 }
 
 .pc .pt {
   font-family: 'Lilita One', Impact, sans-serif;
-  font-size: 20px;
-  color: var(--v);
+  font-size: 16px;
+  color: var(--on);
 }
 
-/* Player List */
-.list {
-  display: grid;
-  gap: 12px;
-}
-
-.pl {
-  display: grid;
-  grid-template-columns: 48px 1fr auto auto;
-  align-items: center;
-  gap: 14px;
+/* Standings Panel (Right Column) - Fixed height clamp, no list-driven growth */
+.card.standings-panel {
+  height: clamp(340px, 55dvh, 460px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--panel);
   border: 3px solid var(--line);
-  border-radius: 16px;
-  padding: 12px 18px;
-  box-shadow: 0 4px 0 var(--line);
+  border-radius: 18px;
+  box-shadow: 0 6px 0 var(--line);
+  position: relative;
+  padding: 0;
+}
+
+.standings-header {
+  padding: 10px 16px;
+  border-bottom: 3px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: var(--panel);
+}
+
+.standings-header h2 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 18px;
+  margin: 0;
   color: var(--ink);
+  line-height: 1.2;
+}
+
+.standings-count {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--mute);
+  white-space: nowrap;
+}
+
+/* Standings Scroll Area */
+.standings-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px 8px 6px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--y) var(--panel2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.standings-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.standings-scroll::-webkit-scrollbar-track {
+  background: var(--panel2);
+  border-radius: 99px;
+}
+
+.standings-scroll::-webkit-scrollbar-thumb {
+  background: var(--y);
+  border-radius: 99px;
+}
+
+/* Standings Fade Indicator at Bottom */
+.standings-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to top, var(--panel) 15%, transparent 100%);
+  pointer-events: none;
+  border-radius: 0 0 15px 15px;
+  z-index: 5;
+}
+
+/* Player Rows */
+.pl {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  padding: 6px 12px;
+  box-shadow: 0 3px 0 var(--line);
+  color: var(--ink);
+  box-sizing: border-box;
 }
 
 .pl .rn {
   font-family: 'Lilita One', Impact, sans-serif;
-  font-size: 24px;
+  font-size: 16px;
   color: var(--mute);
   text-align: center;
 }
 
+/* Logged-In Player Row: Pinned Sticky */
 .pl.me {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background: var(--s);
   color: var(--on);
-  box-shadow: 0 6px 0 var(--line);
-  transform: scale(1.02);
-  z-index: 2;
-  margin-bottom: 6px;
+  box-shadow: 0 4px 0 var(--line);
 }
 
 .pl.me .rn,
@@ -251,59 +493,139 @@
 .pl-user-col {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
 }
 
 .pl-username {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pl-badge {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 800;
-  padding: 2px 10px;
+  padding: 1px 7px;
   border-radius: 99px;
   border: 2px solid var(--line);
   background: var(--v);
   color: var(--on);
+  flex-shrink: 0;
 }
 
 .pl .pt {
   font-family: 'Lilita One', Impact, sans-serif;
-  font-size: 20px;
+  font-size: 14px;
   color: var(--v);
+  white-space: nowrap;
 }
 
 .gap {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--g);
-  min-width: 92px;
+  min-width: 70px;
   text-align: right;
+  white-space: nowrap;
 }
 
-.privacy-note {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--mute);
-  background: rgba(20, 23, 58, 0.3);
-  border: 2px solid var(--line);
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-top: 16px;
+/* ==========================================================================
+   Desktop Viewport Rules (Min 901px wide AND Min 700px high)
+   Page does NOT scroll. Only internal scroll containers scroll.
+   ========================================================================== */
+@media (min-width: 901px) and (min-height: 700px) {
+  .rankings-view {
+    height: calc(100dvh - 67px - env(safe-area-inset-top, 0px) - 64px);
+    max-height: calc(100dvh - 67px - env(safe-area-inset-top, 0px) - 64px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  .rankings-head {
+    flex: none;
+  }
+
+  .card.chase {
+    flex: none;
+    margin-bottom: 0;
+  }
+
+  .rk {
+    flex: 1;
+    min-height: 0;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .pod {
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--y) var(--panel2);
+    padding-right: 4px;
+  }
+
+  .pod::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .pod::-webkit-scrollbar-thumb {
+    background: var(--y);
+    border-radius: 99px;
+  }
+}
+
+/* ==========================================================================
+   Smaller Screens Rules (Max 900px wide ONLY - never stack above 900px)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .rankings-view {
+    height: auto;
+    overflow: visible;
+  }
+
+  .rk {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
 }
 
 @media (max-width: 760px) {
   .pl {
-    grid-template-columns: 36px 1fr auto;
+    grid-template-columns: 28px 1fr auto;
   }
   .pl .gap {
     grid-column: 2 / 4;
     text-align: left;
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .card.p1,
+  .card.p2,
+  .card.p3,
+  .card.p1::after,
+  .p1-crown,
+  .sparkle,
+  .card.p2 .n,
+  .card.p3 .n {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .card.p1::after {
+    display: none !important;
   }
 }

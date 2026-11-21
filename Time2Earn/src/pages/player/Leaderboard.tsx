@@ -9,6 +9,53 @@ import {
 } from '../../services/leaderboardService';
 import './Leaderboard.css';
 
+interface AnimatedExpProps {
+  value: number;
+}
+
+const isReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const AnimatedExp: React.FC<AnimatedExpProps> = ({ value }) => {
+  const [displayVal, setDisplayVal] = useState<number>(() => {
+    return isReducedMotion() ? value : 0;
+  });
+
+  useEffect(() => {
+    if (isReducedMotion() || value <= 0) {
+      return;
+    }
+
+    const duration = 900;
+    let startTimestamp: number | null = null;
+    let rafId: number;
+
+    const animate = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const elapsed = timestamp - startTimestamp;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(easeOut * value);
+      setDisplayVal(current);
+
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
+      } else {
+        setDisplayVal(value);
+      }
+    };
+
+    rafId = requestAnimationFrame(animate);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [value]);
+
+  const shown = isReducedMotion() ? value : displayVal;
+  return <>{shown.toLocaleString()} EXP</>;
+};
+
 export const Leaderboard: React.FC = () => {
   const { config } = useConfig();
   const { user } = useAuth();
@@ -146,6 +193,8 @@ export const Leaderboard: React.FC = () => {
     return '';
   }, [userStanding, entries]);
 
+  const playerCount = totalParticipants || entries.length;
+
   return (
     <div className="rankings-view">
       {/* 1. Header & Live Countdown */}
@@ -153,7 +202,7 @@ export const Leaderboard: React.FC = () => {
         <div>
           <h1>Champions board</h1>
           <p className="rankings-sub">
-            Ranked by EXP. {totalParticipants || entries.length} players are in this round.
+            Ranked by EXP. {playerCount} players are in this round.
           </p>
         </div>
         <div className="timer">
@@ -163,7 +212,7 @@ export const Leaderboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Motivation Chase Banner (Red) */}
+      {/* 2. Motivation Chase Banner (Yellow) */}
       <div className="card chase">
         <div className="d">{chaseBanner.title}</div>
         <p>{chaseBanner.subtitle}</p>
@@ -178,102 +227,115 @@ export const Leaderboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Two Columns: Left Podium, Right List */}
+      {/* 3. Two Columns: Left Top 3 Podium, Right Standings Panel */}
       <div className="rk">
         {/* LEFT COLUMN: Top 3 Podium */}
         <div className="pod">
           {/* 1st Place Champion */}
           <div className="card p1">
-            <ArcadeIcon name="crown" />
+            {/* 4-point star sparkles */}
+            <svg className="sparkle sparkle-1" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z" />
+            </svg>
+            <svg className="sparkle sparkle-2" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z" />
+            </svg>
+            <svg className="sparkle sparkle-3" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z" />
+            </svg>
+            <svg className="sparkle sparkle-4" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5Z" />
+            </svg>
+
+            <div className="p1-crown">
+              <ArcadeIcon name="crown" />
+            </div>
             <p>1st place</p>
             <div className="d">{firstPlace ? firstPlace.username : 'Empty'}</div>
             <div className="pt">
-              {firstPlace ? `${firstPlace.exp.toLocaleString()} EXP` : '0 EXP'}
+              <AnimatedExp value={firstPlace ? firstPlace.exp : 0} />
             </div>
           </div>
 
           {/* 2nd and 3rd Runner-Ups */}
           <div className="pair">
-            <div className="card pc">
-              <div className="n" style={{ background: '#D5DAF5' }}>
-                2
-              </div>
+            <div className="card pc p2">
+              <div className="n">2</div>
               <div className="d">{secondPlace ? secondPlace.username : 'Empty'}</div>
               <div className="pt">
-                {secondPlace ? `${secondPlace.exp.toLocaleString()} EXP` : '0 EXP'}
+                <AnimatedExp value={secondPlace ? secondPlace.exp : 0} />
               </div>
             </div>
 
-            <div className="card pc">
-              <div className="n" style={{ background: '#F0A15E' }}>
-                3
-              </div>
+            <div className="card pc p3">
+              <div className="n">3</div>
               <div className="d">{thirdPlace ? thirdPlace.username : 'Empty'}</div>
               <div className="pt">
-                {thirdPlace ? `${thirdPlace.exp.toLocaleString()} EXP` : '0 EXP'}
+                <AnimatedExp value={thirdPlace ? thirdPlace.exp : 0} />
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Player List */}
-        <div className="list">
-          {loading ? (
-            [1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="pl"
-                style={{ opacity: 0.5, minHeight: '52px' }}
-              />
-            ))
-          ) : (
-            <>
-              {/* Player's Own Highlighted Row is FIRST */}
-              {userStanding && (
-                <div className="pl me">
-                  <span className="rn">{userStanding.rankPosition}</span>
-                  <div className="pl-user-col">
-                    <span className="pl-username">{userStanding.username}</span>
-                    <span
-                      className="pl-badge"
-                      style={{ background: 'var(--on)', color: 'var(--s)' }}
-                    >
-                      You
-                    </span>
-                  </div>
-                  <span className="pt">{userStanding.exp.toLocaleString()} EXP</span>
-                  <span className="gap">{myGapText}</span>
-                </div>
-              )}
+        {/* RIGHT COLUMN: Player List in Scrollable Panel */}
+        <div className="card standings-panel">
+          <div className="standings-header">
+            <h2>Standings</h2>
+            <span className="standings-count">{playerCount} players</span>
+          </div>
 
-              {/* Ranks 4+ List */}
-              {listEntries.map((player) => {
-                const leadDiff = userStanding ? userStanding.exp - player.exp : 0;
-                return (
-                  <div key={player.username} className="pl">
-                    <span className="rn">{player.rankPosition}</span>
+          <div className="standings-scroll">
+            {loading ? (
+              [1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="pl"
+                  style={{ opacity: 0.5, minHeight: '38px' }}
+                />
+              ))
+            ) : (
+              <>
+                {/* Player's Own Highlighted Row is FIRST and STICKY */}
+                {userStanding && (
+                  <div className="pl me">
+                    <span className="rn">{userStanding.rankPosition}</span>
                     <div className="pl-user-col">
-                      <span className="pl-username">{player.username}</span>
-                      <span className="pl-badge">{player.rank}</span>
+                      <span className="pl-username">{userStanding.username}</span>
+                      <span
+                        className="pl-badge"
+                        style={{ background: 'var(--on)', color: 'var(--s)' }}
+                      >
+                        You
+                      </span>
                     </div>
-                    <span className="pt">{player.exp.toLocaleString()} EXP</span>
-                    <span className="gap">
-                      {leadDiff > 0 ? `You lead by ${leadDiff.toLocaleString()}` : ''}
-                    </span>
+                    <span className="pt">{userStanding.exp.toLocaleString()} EXP</span>
+                    <span className="gap">{myGapText}</span>
                   </div>
-                );
-              })}
-            </>
-          )}
-        </div>
-      </div>
+                )}
 
-      {/* Privacy Notice */}
-      <div className="privacy-note">
-        <ArcadeIcon name="lock" size={18} />
-        <span>
-          Public-safe standings: Only username, rank badge, and lifetime EXP score are public. Private balances, debts, and transaction histories are never exposed.
-        </span>
+                {/* Ranks 4+ List */}
+                {listEntries.map((player) => {
+                  const leadDiff = userStanding ? userStanding.exp - player.exp : 0;
+                  return (
+                    <div key={player.username} className="pl">
+                      <span className="rn">{player.rankPosition}</span>
+                      <div className="pl-user-col">
+                        <span className="pl-username">{player.username}</span>
+                        <span className="pl-badge">{player.rank}</span>
+                      </div>
+                      <span className="pt">{player.exp.toLocaleString()} EXP</span>
+                      <span className="gap">
+                        {leadDiff > 0 ? `You lead by ${leadDiff.toLocaleString()}` : ''}
+                      </span>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </div>
+
+          <div className="standings-fade" aria-hidden="true" />
+        </div>
       </div>
     </div>
   );
