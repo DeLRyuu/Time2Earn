@@ -22,6 +22,7 @@ import { AdminSettings } from './pages/admin/AdminSettings';
 
 // Auth & Fallbacks
 import { Login } from './pages/auth/Login';
+import { QrEntry } from './pages/QrEntry';
 import { NotFound } from './pages/NotFound';
 
 function App() {
@@ -31,8 +32,9 @@ function App() {
         {/* Landing redirects to Player Home */}
         <Route path="/" element={<Navigate to="/player" replace />} />
 
-        {/* Public Auth Route */}
+        {/* Public Auth & QR Routes */}
         <Route path="/login" element={<Login />} />
+        <Route path="/qr" element={<QrEntry />} />
 
         {/* Player Section with Route Guard */}
         <Route

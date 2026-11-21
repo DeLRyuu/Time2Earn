@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -9,6 +10,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../hooks/useAuth';
 import { useConfig } from '../../hooks/useConfig';
+import { usePwaInstall } from '../../lib/pwa';
 import { fetchPlayerSessions } from '../../services/sessionService';
 import { fetchPlayerRedemptions } from '../../services/redemptionService';
 import { fetchPlayerDebt, fetchPlayerDebtRequests, submitDebtPaymentRequest } from '../../services/debtService';
@@ -38,6 +40,14 @@ export const Profile: React.FC = () => {
   const { user } = useAuth();
   const { config } = useConfig();
   const { showToast } = useToast();
+  const { isInstallable, isInstalled, promptInstall } = usePwaInstall();
+
+  const handleInstallApp = async () => {
+    const res = await promptInstall();
+    if (res === 'accepted') {
+      showToast('Time2Earn installed to your home screen!', 'success');
+    }
+  };
 
   const [sessions, setSessions] = useState<SessionRequest[]>([]);
   const [redemptions, setRedemptions] = useState<RedemptionRequest[]>([]);
@@ -637,6 +647,34 @@ export const Profile: React.FC = () => {
             Time2Earn utilizes secure, staff-assisted credential recovery to safeguard your account against unauthorized access.
             If you need to change your password or verify account credentials, please visit the shop counter and present your username to staff.
           </p>
+        </div>
+      </Card>
+
+      {/* 6. PWA & Mobile Access */}
+      <Card variant="default" header={<span>APP INSTALLATION & DESK QR</span>}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <div style={{ fontWeight: 800 }}>Mobile PWA App Experience</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                {isInstalled
+                  ? 'Running as installed standalone application.'
+                  : 'Install Time2Earn to your device home screen for 1-tap instant access.'}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <Link to="/qr" style={{ textDecoration: 'none' }}>
+                <Button variant="secondary" size="sm">
+                  📱 Shop Desk QR
+                </Button>
+              </Link>
+              {isInstallable && !isInstalled && (
+                <Button variant="arcade" size="sm" onClick={handleInstallApp}>
+                  ⚡ Install App
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </Card>
 

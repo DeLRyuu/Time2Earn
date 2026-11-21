@@ -1,0 +1,56 @@
+{
+  "name": "Time2Earn",
+  "short_name": "Time2Earn",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#080b11",
+  "theme_color": "#080b11",
+  "description": "Time2Earn — Play. Earn. Rank Up. Redeem. Gaming shop loyalty rewards.",
+  "lang": "en",
+  "categories": ["games", "entertainment", "utilities"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/player",
+      "description": "View credits, EXP, and current streak"
+    },
+    {
+      "name": "Rewards Catalog",
+      "url": "/player/rewards",
+      "description": "Redeem play time, snacks, and gaming passes"
+    },
+    {
+      "name": "Cyber Arcade",
+      "url": "/player/arcade",
+      "description": "Daily Quick Quiz trivia for bonus Credits"
+    }
+  ]
+}
