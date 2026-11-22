@@ -10,6 +10,8 @@ import { calculateCreditPreview } from '../../lib/credits';
 import { submitSessionRequest, fetchPlayerSessions } from '../../services/sessionService';
 import { BACKUP_REWARDS } from '../../services/redemptionService';
 import type { SessionRequest } from '../../types/session';
+import tokenCoinImg from '../../assets/token/token-coin.png';
+import streakImg from '../../assets/streak/streak.png';
 import './Home.css';
 
 const POPULAR_UNITS = ['PC-01', 'PC-02', 'PC-03', 'PC-04', 'PC-05', 'PC-06', 'PC-07', 'PC-08', 'PC-09', 'PC-10'];
@@ -23,7 +25,7 @@ export const Home: React.FC = () => {
 
   // Insert Coin State
   const [pesosInput, setPesosInput] = useState<string>('');
-  const [selectedUnit, setSelectedUnit] = useState<string>('PC-01');
+  const [selectedUnit, setSelectedUnit] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [coinDropping, setCoinDropping] = useState<boolean>(false);
   const dropTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -127,21 +129,25 @@ export const Home: React.FC = () => {
   const numPesos = Math.floor(Number(pesosInput) || 0);
   const conversionRate = config.phpToCreditRate || 1;
   const previewTokens = Math.floor(calculateCreditPreview(numPesos, conversionRate));
-  const canInsert = numPesos >= 1 && previewTokens >= 1;
+  const hasUnit = Boolean(selectedUnit);
+  const canInsert = hasUnit && numPesos >= 1 && previewTokens >= 1;
 
   const validationMsg = useMemo(() => {
+    if (!hasUnit) {
+      return 'Select a PC unit first.';
+    }
     if (numPesos > 0 && previewTokens < 1) {
       return 'Insert at least ₱1.';
     }
     return '';
-  }, [numPesos, previewTokens]);
+  }, [hasUnit, numPesos, previewTokens]);
 
   const handleQuickAmount = (amt: number) => {
     setPesosInput(String(amt));
   };
 
   const handleInsertCoin = async () => {
-    if (!canInsert || isSubmitting) return;
+    if (!canInsert || !selectedUnit || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
@@ -229,8 +235,18 @@ export const Home: React.FC = () => {
 
         {/* Streak box on the right */}
         <div className="streak">
-          <div className="sk">
-            <ArcadeIcon name="fire" />
+         <div className="sk">
+            <img
+              src={streakImg}
+              alt=""
+              aria-hidden="true"
+              style={{
+                width: '40px',
+                height: '40px',
+                objectFit: 'contain',
+                display: 'block',
+              }}
+            />
             <span className="d">{streakCount}</span>
             <span>day streak</span>
           </div>
@@ -296,6 +312,9 @@ export const Home: React.FC = () => {
               value={selectedUnit}
               onChange={(e) => setSelectedUnit(e.target.value)}
             >
+              <option value="" disabled>
+                Select unit
+              </option>
               {POPULAR_UNITS.map((u) => (
                 <option key={u} value={u}>{u}</option>
               ))}
@@ -307,10 +326,14 @@ export const Home: React.FC = () => {
           <p className="m">You’ll get</p>
           <div className="tkrow">
             <span className="tk" aria-hidden="true">
-              <ArcadeIcon name="pad" />
+              <img
+                src={tokenCoinImg}
+                alt=""
+                style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+              />
             </span>
             <span className="d" style={{ fontSize: '52px' }}>
-              <span id="prev">{previewTokens}</span> tokens
+              <span id="prev">{previewTokens}</span> Tokens
             </span>
           </div>
  

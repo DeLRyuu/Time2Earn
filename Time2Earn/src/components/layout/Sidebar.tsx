@@ -4,6 +4,11 @@ import { useAuth } from '../../hooks/useAuth';
 import { ArcadeIcon } from '../ui/ArcadeIcon';
 import { BACKUP_REWARDS } from '../../services/redemptionService';
 import './Sidebar.css';
+import webIconImg from '../../assets/sidebar/web-icon.png';
+import homeImg from '../../assets/sidebar/home.png';
+import arcadeZoneImg from '../../assets/sidebar/arcade-zone.png';
+import prizeShopImg from '../../assets/sidebar/prize-shop.png';
+import rankingImg from '../../assets/sidebar/ranking.png';
 
 interface SidebarProps {
   isAdmin?: boolean;
@@ -20,10 +25,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isAdmin = false }) => {
 
   return (
     <nav className="side" aria-label={isAdmin ? 'Admin Console Navigation' : 'Main Navigation'}>
-      {/* Brand Header */}
+     {/* Brand Header */}
       <div className="logo">
         <b>
-          <ArcadeIcon name="bolt" />
+          <img
+            src={webIconImg}
+            alt=""
+            aria-hidden="true"
+            style={{
+              width: '46px',
+              height: '46px',
+              objectFit: 'contain',
+              display: 'block',
+            }}
+          />
         </b>
         <div>
           <span>Time2Earn</span>
@@ -105,19 +120,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ isAdmin = false }) => {
             end
             className={({ isActive }) => `nav ${isActive ? 'on' : ''}`}
           >
-            <ArcadeIcon name="home" />
+            <img
+              src={homeImg}
+              alt=""
+              aria-hidden="true"
+              style={{
+                width: '30px',
+                height: '30px',
+                objectFit: 'contain',
+                display: 'block',
+                flexShrink: 0,
+              }}
+            />
             <span>Home</span>
           </NavLink>
 
           {/* Arcade Zone: Big Yellow Button */}
           <NavLink
-            to="/player/arcade"
-            className={({ isActive }) => `nav big arc ${isActive ? 'on' : ''}`}
-            aria-label="Arcade Zone"
-          >
-            <ArcadeIcon name="joy" />
-            <span>Arcade Zone</span>
-            <em>Play now</em>
+              to="/player/arcade"
+              className={({ isActive }) => `nav big arc ${isActive ? 'on' : ''}`}
+              aria-label="Arcade Zone"
+            >
+              <img
+                src={arcadeZoneImg}
+                alt=""
+                aria-hidden="true"
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  objectFit: 'contain',
+                  display: 'block',
+                  flexShrink: 0,
+                }}
+              />
+              <span>Arcade Zone</span>
+              <em>Play now</em>
           </NavLink>
 
           {/* Prize Shop: Big Red Button */}
@@ -126,7 +163,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isAdmin = false }) => {
             className={({ isActive }) => `nav big shop ${isActive ? 'on' : ''}`}
             aria-label="Prize Shop"
           >
-            <ArcadeIcon name="gift" />
+            <img
+              src={prizeShopImg}
+              alt=""
+              aria-hidden="true"
+              style={{
+                width: '35px',
+                height: '35px',
+                objectFit: 'contain',
+                display: 'block',
+                flexShrink: 0,
+              }}
+            />
             <span>Prize Shop</span>
             <em id="canTag">{claimableCount} to claim</em>
           </NavLink>
@@ -136,8 +184,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isAdmin = false }) => {
             to="/player/leaderboard"
             className={({ isActive }) => `nav ${isActive ? 'on' : ''}`}
           >
-            <ArcadeIcon name="cup" />
-            <span>Rankings</span>
+            <img
+              src={rankingImg}
+              alt=""
+              aria-hidden="true"
+              style={{
+                width: '35px',
+                height: '35px',
+                objectFit: 'contain',
+                display: 'block',
+                flexShrink: 0,
+              }}
+            />
+            <span>Leaderboards</span>
           </NavLink>
 
           <div className="sp" />
