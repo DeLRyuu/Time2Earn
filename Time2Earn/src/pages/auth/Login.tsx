@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
-import { useNavigate } from 'react-router-dom';
+import { ArcadeIcon } from '../../components/ui/ArcadeIcon';
+import {
+  consumePrefillLogin,
+  getRegisteredUsers,
+  removeRegisteredUser,
+  type RegisteredUser,
+} from './authRegistration';
+import webIconImg from '../../assets/sidebar/web-icon.png';
+import tokenCoinImg from '../../assets/token/token-coin.png';
+import streakImg from '../../assets/streak/streak.png';
+import prizeShopImg from '../../assets/sidebar/prize-shop.png';
+import './AuthPages.css';
 
 export const Login: React.FC = () => {
   const { login } = useAuth();
@@ -12,26 +22,37 @@ export const Login: React.FC = () => {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setRegisteredUsers(getRegisteredUsers());
+    const prefill = consumePrefillLogin();
+    if (prefill) {
+      setUsername(prefill.username);
+      setPassword(prefill.password);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!username.trim() || !password) {
+    const cleanUsername = username.trim();
+    if (!cleanUsername || !password) {
       setErrorMessage('Please enter both username and password.');
       return;
     }
 
     setIsLoading(true);
-    const res = await login(username, password);
+    const res = await login(cleanUsername, password);
     setIsLoading(false);
 
     if (res.success) {
-      showToast(`Welcome back, ${username}!`, 'success');
-      // If admin username is "admin" or user has admin role
-      if (username.toLowerCase() === 'admin') {
+      showToast(`Welcome back, ${cleanUsername}!`, 'success');
+      if (cleanUsername.toLowerCase() === 'admin') {
         navigate('/admin');
       } else {
         navigate('/player');
@@ -42,122 +63,171 @@ export const Login: React.FC = () => {
     }
   };
 
-  const handleQuickDemo = (demoUser: string, demoPass: string) => {
-    setUsername(demoUser);
-    setPassword(demoPass);
+  const handleQuickFill = (user: string, pass: string) => {
+    setUsername(user);
+    setPassword(pass);
+    setErrorMessage(null);
+  };
+
+  const handleDeleteRegisteredUser = (e: React.MouseEvent, userToDelete: string) => {
+    e.stopPropagation();
+    removeRegisteredUser(userToDelete);
+    setRegisteredUsers(getRegisteredUsers());
+    if (username.toLowerCase() === userToDelete.toLowerCase()) {
+      setUsername('');
+      setPassword('');
+    }
+    showToast(`Removed ${userToDelete} from saved roster.`, 'info');
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: '420px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.25rem' }}>⚡</div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '0.05em' }}>
-            TIME<span style={{ color: 'var(--primary)' }}>2</span>EARN
+    <div className="auth-page">
+      <div className="auth-container">
+        {/* Arcade Brand Marquee */}
+        <div className="auth-header">
+          <div className="auth-logo-badge">
+            <img src={webIconImg} alt="Time2Earn Arcade" />
+          </div>
+          <h1 className="auth-title">
+            TIME<span className="highlight">2</span>EARN
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Play. Earn. Rank Up. Redeem.
-          </p>
+          <div className="auth-subtitle">
+            <span>Play</span>
+            <span className="auth-subtitle-dot">•</span>
+            <span>Earn</span>
+            <span className="auth-subtitle-dot">•</span>
+            <span>Rank Up</span>
+            <span className="auth-subtitle-dot">•</span>
+            <span>Redeem</span>
+          </div>
         </div>
 
-        <Card variant="neon">
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {errorMessage && (
-              <div
-                style={{
-                  background: 'rgba(239, 68, 68, 0.15)',
-                  border: '1px solid var(--danger)',
-                  padding: '0.65rem 0.85rem',
-                  borderRadius: 'var(--radius-sm)',
-                  color: 'var(--danger)',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                }}
-              >
-                {errorMessage}
-              </div>
-            )}
+        {/* Tab Switcher */}
+        <div className="auth-nav-tabs">
+          <button type="button" className="auth-tab-btn active">
+            <ArcadeIcon name="user" size={16} />
+            <span>Sign In</span>
+          </button>
+          <Link to="/register" className="auth-tab-btn">
+            <ArcadeIcon name="joy" size={16} />
+            <span>Register</span>
+          </Link>
+        </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                USERNAME
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. lois_123xx"
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border-medium)',
-                  borderRadius: 'var(--radius-sm)',
-                  color: 'var(--text-primary)',
-                  fontSize: '0.95rem',
-                  outline: 'none',
-                }}
-              />
+        {/* Main Sign-In Cabinet Card */}
+        <div className="auth-card">
+          <div className="auth-card-banner">
+            <div className="auth-card-banner-title">
+              <ArcadeIcon name="joy" size={20} />
+              <span>Player Console</span>
             </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                PASSWORD
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border-medium)',
-                  borderRadius: 'var(--radius-sm)',
-                  color: 'var(--text-primary)',
-                  fontSize: '0.95rem',
-                  outline: 'none',
-                }}
-              />
-            </div>
-
-            <Button type="submit" variant="primary" size="lg" isLoading={isLoading} style={{ marginTop: '0.5rem', width: '100%' }}>
-              ENTER CONSOLE
-            </Button>
-
-            <div style={{ textAlign: 'center', marginTop: '0.25rem' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Forgot password? Request staff assistance at the shop desk.
-              </span>
-            </div>
-          </form>
-        </Card>
-
-        {/* Quick Demo Test Credential Buttons */}
-        <div style={{ marginTop: '1.25rem', padding: '0.75rem 1rem', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)' }}>
-          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-            Test Accounts (Phase 3 Validation)
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <Button
-              variant="secondary"
-              size="sm"
-              style={{ flex: 1 }}
-              onClick={() => handleQuickDemo('lois_123xx', 'password123')}
+
+          {errorMessage && (
+            <div className="auth-alert-error" role="alert">
+              <ArcadeIcon name="shield" size={18} />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="auth-form">
+            {/* Username Input */}
+            <div className="auth-field">
+              <label htmlFor="login-username" className="auth-label">
+                <span>Player Username</span>
+              </label>
+              <div className="auth-input-wrap">
+                <input
+                  id="login-username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="e.g. lois_123xx"
+                  autoComplete="username"
+                  required
+                  className="auth-input"
+                />
+              </div>
+            </div>
+
+            {/* Password Input */}
+            <div className="auth-field">
+              <label htmlFor="login-password" className="auth-label">
+                <span>Password</span>
+              </label>
+              <div className="auth-input-wrap">
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                  className="auth-input"
+                />
+                <button
+                  type="button"
+                  className="auth-input-icon-btn"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <ArcadeIcon name={showPassword ? 'clock' : 'key'} size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="auth-submit-btn"
+              disabled={isLoading}
             >
-              Player (lois)
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              style={{ flex: 1 }}
-              onClick={() => handleQuickDemo('admin', 'adminpassword123')}
+              <span>{isLoading ? 'ACCESSING CONSOLE...' : 'LOGIN'}</span>
+            </button>
+          </form>
+        </div>
+
+        {/* Quick Demo Test Stations */}
+        <div className="auth-drawer">
+          <div className="auth-drawer-title">
+            <span>Demo Stations (1-Click)</span>
+            <span className="auth-drawer-count">Offline Ready</span>
+          </div>
+          <div className="auth-demo-grid">
+            <button
+              type="button"
+              className="auth-demo-btn"
+              onClick={() => handleQuickFill('lois_123xx', 'password123')}
             >
-              Staff Admin
-            </Button>
+              <span className="auth-demo-badge">Player Console</span>
+              <span className="auth-demo-sub">lois_123xx (Gamer)</span>
+            </button>
+            <button
+              type="button"
+              className="auth-demo-btn"
+              onClick={() => handleQuickFill('admin', 'adminpassword123')}
+            >
+              <span className="auth-demo-badge" style={{ color: 'var(--v)' }}>Staff Admin</span>
+              <span className="auth-demo-sub">admin (Full Access)</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Feature Highlights Row using Project Assets */}
+        <div className="auth-perks-row">
+          <div className="auth-perk-item">
+            <img src={tokenCoinImg} alt="Tokens" />
+            <span className="auth-perk-text">Earn Tokens on PC Time</span>
+          </div>
+          <div className="auth-perk-item">
+            <img src={streakImg} alt="Streaks" />
+            <span className="auth-perk-text">Daily Streak Boosts</span>
+          </div>
+          <div className="auth-perk-item">
+            <img src={prizeShopImg} alt="Rewards" />
+            <span className="auth-perk-text">Claim Real Snacks & Drinks</span>
           </div>
         </div>
       </div>

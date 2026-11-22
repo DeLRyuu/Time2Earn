@@ -4,6 +4,7 @@ import { db, hasValidFirebaseConfig } from '../lib/firebase';
 import type { AuthUser, UserSession } from '../types/auth';
 import { AuthContext } from './authContextDef';
 import { assertRateLimit, RATE_LIMITS } from '../lib/rateLimit';
+import { getRegisteredUsers } from '../pages/auth/authRegistration';
 
 const SESSION_STORAGE_KEY = 't2e_auth_session';
 
@@ -70,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.removeItem(SESSION_STORAGE_KEY);
         }
       } else {
-        // Fallback rehydration using test data
+        // Fallback rehydration using test data or locally registered accounts
         const mock = MOCK_TEST_USERS[session.username];
         if (mock) {
           setUser({
@@ -85,6 +86,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             isRestricted: false,
             mustChangePassword: false,
           });
+        } else {
+          const registered = getRegisteredUsers().find(
+            (u) => u.username.toLowerCase() === session.username.toLowerCase()
+          );
+          if (registered) {
+            setUser({
+              uid: registered.uid || session.uid,
+              username: registered.username,
+              role: 'user',
+              credits: registered.credits ?? 0,
+              exp: registered.exp ?? 0,
+              rank: registered.rank ?? 'Newbie',
+              streak: registered.streak ?? 0,
+              birthday: registered.birthday,
+              isBanned: false,
+              isRestricted: false,
+              mustChangePassword: false,
+            });
+          } else {
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+          }
         }
       }
     } catch (err) {
@@ -176,43 +198,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(authUser);
         return { success: true };
       } else {
-        // Offline / Test mock authentication
+        // Offline / Test mock authentication or registered local accounts
         const mock = MOCK_TEST_USERS[cleanUsername];
-        if (!mock) {
-          const msg = `Account "${cleanUsername}" not found. (Test accounts: lois_123xx, sherwin, admin)`;
-          setError(msg);
-          return { success: false, error: msg };
+        if (mock) {
+          if (mock.password !== passwordInput) {
+            const msg = 'Incorrect password for test account.';
+            setError(msg);
+            return { success: false, error: msg };
+          }
+
+          const authUser: AuthUser = {
+            uid: mock.uid || (cleanUsername === 'admin' ? 'admin_test_uid' : 'player_test_uid'),
+            username: cleanUsername,
+            role: mock.role,
+            credits: mock.credits,
+            exp: mock.exp,
+            rank: mock.rank,
+            streak: mock.streak,
+            isBanned: false,
+            isRestricted: false,
+            mustChangePassword: false,
+            lastLoginAt: new Date().toISOString(),
+          };
+
+          const session: UserSession = {
+            uid: authUser.uid,
+            username: authUser.username,
+            role: authUser.role,
+            expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+          };
+          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+          setUser(authUser);
+          return { success: true };
         }
 
-        if (mock.password !== passwordInput) {
-          const msg = 'Incorrect password for test account.';
-          setError(msg);
-          return { success: false, error: msg };
+        // Check if user is in registered roster
+        const registered = getRegisteredUsers().find(
+          (u) => u.username.toLowerCase() === cleanUsername.toLowerCase()
+        );
+        if (registered) {
+          if (registered.password !== passwordInput) {
+            const msg = 'Incorrect password for registered account.';
+            setError(msg);
+            return { success: false, error: msg };
+          }
+
+          const authUser: AuthUser = {
+            uid: registered.uid || `local_${registered.username}`,
+            username: registered.username,
+            role: 'user',
+            credits: registered.credits ?? 0,
+            exp: registered.exp ?? 0,
+            rank: registered.rank ?? 'Newbie',
+            streak: registered.streak ?? 0,
+            birthday: registered.birthday,
+            isBanned: false,
+            isRestricted: false,
+            mustChangePassword: false,
+            lastLoginAt: new Date().toISOString(),
+          };
+
+          const session: UserSession = {
+            uid: authUser.uid,
+            username: authUser.username,
+            role: authUser.role,
+            expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+          };
+          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+          setUser(authUser);
+          return { success: true };
         }
 
-        const authUser: AuthUser = {
-          uid: mock.uid || (cleanUsername === 'admin' ? 'admin_test_uid' : 'player_test_uid'),
-          username: cleanUsername,
-          role: mock.role,
-          credits: mock.credits,
-          exp: mock.exp,
-          rank: mock.rank,
-          streak: mock.streak,
-          isBanned: false,
-          isRestricted: false,
-          mustChangePassword: false,
-          lastLoginAt: new Date().toISOString(),
-        };
-
-        const session: UserSession = {
-          uid: authUser.uid,
-          username: authUser.username,
-          role: authUser.role,
-          expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
-        };
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
-        setUser(authUser);
-        return { success: true };
+        const msg = `Account "${cleanUsername}" not found. (Test accounts: lois_123xx, sherwin, admin or register a new account)`;
+        setError(msg);
+        return { success: false, error: msg };
       }
     } catch (err) {
       console.error('Login error:', err);
