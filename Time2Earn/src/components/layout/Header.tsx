@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdmin = false }) => {
                 display: 'block',
               }}
             />
-            <b id="tk">{user.credits.toLocaleString()}</b> tokens
+            <b id="tk">{user.credits.toLocaleString()}</b> Tokens
           </span>
         </>
       )}

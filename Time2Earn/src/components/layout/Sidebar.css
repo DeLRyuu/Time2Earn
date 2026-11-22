@@ -74,6 +74,25 @@
   border-color: var(--line);
 }
 
+.nav.bordered {
+  background: var(--panel2);
+  color: var(--ink);
+  border: 3px solid var(--line);
+  border-radius: 16px;
+}
+
+.nav.bordered:hover {
+  background: var(--panel2);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.nav.bordered.on {
+  background: var(--panel2);
+  color: var(--ink);
+  border-color: #ffffff;
+}
+
 /* Big Action Nav Buttons: Arcade Zone & Prize Shop */
 .big {
   padding: 16px 14px;
@@ -185,3 +204,4 @@
     box-shadow: 0 3px 0 var(--line);
   }
 }
+

@@ -1,0 +1,371 @@
+.utang-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+  color: var(--ink);
+}
+
+.utang-card {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-sizing: border-box;
+}
+
+.utang-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.utang-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.utang-hero-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--y);
+  color: var(--on);
+  border: 3px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  flex-shrink: 0;
+}
+
+.utang-hero h1,
+.utang-card h2 {
+  font: 400 24px 'Lilita One', Impact, sans-serif;
+  margin: 0 0 4px 0;
+  letter-spacing: 0.4px;
+}
+
+.utang-hero p,
+.utang-sub {
+  margin: 0;
+  color: var(--mute);
+  font-size: 13.5px;
+}
+
+.compact-sub {
+  font-size: 12px;
+}
+
+.utang-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.stat-pill {
+  background: var(--panel2);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: var(--mute);
+}
+
+.stat-pill strong {
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.stat-pill strong.text-warn {
+  color: var(--y);
+}
+
+/* Main workspace fills width with left action cards + compact right history */
+.utang-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 340px);
+  gap: 16px;
+  align-items: start;
+}
+
+.utang-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.utang-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.utang-history-card {
+  padding: 16px;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.history-count {
+  background: var(--panel2);
+  border: 2px solid var(--line);
+  border-radius: 99px;
+  padding: 2px 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Scrollable only inside the history panel */
+.utang-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.utang-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.utang-list::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 99px;
+}
+
+.utang-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--panel2);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.utang-item-body {
+  min-width: 0;
+}
+
+.utang-item small {
+  display: block;
+  color: var(--mute);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.utang-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(240px, 1fr);
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.utang-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.utang-left label {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--mute);
+}
+
+.utang-input {
+  background: var(--panel2);
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 800;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.utang-input.small {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 11px;
+}
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset-btn {
+  background: var(--panel2);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: 99px;
+  padding: 5px 13px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.08s, background 0.1s;
+}
+
+.preset-btn:hover:not(:disabled),
+.preset-btn.active {
+  background: var(--y);
+  color: var(--on);
+}
+
+.preset-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.field-row-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.utang-select {
+  background: var(--panel2);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-weight: 700;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.utang-right {
+  background: var(--panel2);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.preview-label,
+.preview-hint {
+  font-size: 12.5px;
+  color: var(--mute);
+  margin: 0;
+}
+
+.token-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 400 30px 'Lilita One', Impact, sans-serif;
+}
+
+.utang-submit {
+  background: var(--y);
+  color: var(--on);
+  border: 3px solid var(--line);
+  box-shadow: 0 4px 0 var(--line);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font: 400 17px 'Lilita One', Impact, sans-serif;
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.utang-submit:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.utang-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.utang-feedback {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--y);
+}
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+  flex-shrink: 0;
+}
+
+.status-badge.unpaid {
+  background: var(--r);
+  color: var(--on);
+}
+
+.status-badge.pending {
+  background: var(--y);
+  color: var(--on);
+}
+
+.status-badge.paid {
+  background: #2ecc71;
+  color: #0b132b;
+}
+
+@media (max-width: 1024px) {
+  .utang-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .utang-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .utang-list {
+    max-height: 260px;
+  }
+}
+
+@media (max-width: 760px) {
+  .utang-grid,
+  .field-row-split {
+    grid-template-columns: 1fr;
+  }
+
+  .utang-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -9,6 +9,7 @@ import { Rewards } from './pages/player/Rewards';
 import { Arcade } from './pages/player/Arcade';
 import { Leaderboard } from './pages/player/Leaderboard';
 import { Profile } from './pages/player/Profile';
+import { UtangPage } from './pages/player/UtangPage';
 
 // Admin Pages
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -50,6 +51,7 @@ function App() {
           <Route path="arcade" element={<Arcade />} />
           <Route path="leaderboard" element={<Leaderboard />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="/player/utang" element={<UtangPage />} />
         </Route>
 
         {/* Admin Section with Strict Admin Guard */}
@@ -73,6 +75,9 @@ function App() {
 
         {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
+
+        
+
       </Routes>
     </BrowserRouter>
   );

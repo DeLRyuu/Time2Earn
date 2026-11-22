@@ -9,6 +9,7 @@ import homeImg from '../../assets/sidebar/home.png';
 import arcadeZoneImg from '../../assets/sidebar/arcade-zone.png';
 import prizeShopImg from '../../assets/sidebar/prize-shop.png';
 import rankingImg from '../../assets/sidebar/ranking.png';
+import utangImg from '../../assets/utang/utang.png';
 
 interface SidebarProps {
   isAdmin?: boolean;
@@ -118,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isAdmin = false }) => {
           <NavLink
             to="/player"
             end
-            className={({ isActive }) => `nav ${isActive ? 'on' : ''}`}
+            className={({ isActive }) => `nav bordered ${isActive ? 'on' : ''}`}
           >
             <img
               src={homeImg}
@@ -182,7 +183,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isAdmin = false }) => {
           {/* Rankings: Champions Board */}
           <NavLink
             to="/player/leaderboard"
-            className={({ isActive }) => `nav ${isActive ? 'on' : ''}`}
+            className={({ isActive }) => `nav bordered ${isActive ? 'on' : ''}`}
           >
             <img
               src={rankingImg}
@@ -197,6 +198,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isAdmin = false }) => {
               }}
             />
             <span>Leaderboards</span>
+          </NavLink>
+
+          {/* Utang Page */}
+          <NavLink
+            to="/player/utang"
+            className={({ isActive }) => `nav bordered ${isActive ? 'on' : ''}`}
+          >
+            <img
+              src={utangImg}
+              alt=""
+              aria-hidden="true"
+              style={{
+                width: '35px',
+                height: '35px',
+                objectFit: 'contain',
+                display: 'block',
+                flexShrink: 0,
+              }}
+            />
+            <span>Utang</span>
           </NavLink>
 
           <div className="sp" />
