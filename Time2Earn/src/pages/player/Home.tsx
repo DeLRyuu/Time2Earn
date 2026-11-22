@@ -256,7 +256,7 @@ export const Home: React.FC = () => {
       <section className="card coin" aria-labelledby="ct">
         <div>
           <h2 id="ct">Insert Coin</h2>
-          <p className="m">Drop your coins in the slot to load tokens.</p>
+          <p className="m">Ilagay kung ilang pesos ang hinulog.</p>
 
           <div className="slot">
             <span className={`cdrop ${coinDropping ? 'go' : ''}`} id="cdrop" aria-hidden="true">
@@ -280,10 +280,12 @@ export const Home: React.FC = () => {
           />
 
           <div className="qs">
+            <button type="button" onClick={() => handleQuickAmount(5)}>₱5</button>
+            <button type="button" onClick={() => handleQuickAmount(10)}>₱10</button>
+            <button type="button" onClick={() => handleQuickAmount(15)}>₱15</button>
             <button type="button" onClick={() => handleQuickAmount(20)}>₱20</button>
-            <button type="button" onClick={() => handleQuickAmount(50)}>₱50</button>
-            <button type="button" onClick={() => handleQuickAmount(100)}>₱100</button>
-            <button type="button" onClick={() => handleQuickAmount(200)}>₱200</button>
+            <button type="button" onClick={() => handleQuickAmount(25)}>₱25</button>
+            <button type="button" onClick={() => handleQuickAmount(30)}>₱30</button>
           </div>
 
           <div className="unit-row">
@@ -311,8 +313,7 @@ export const Home: React.FC = () => {
               <span id="prev">{previewTokens}</span> tokens
             </span>
           </div>
-
-          <p className="m">₱1 = {conversionRate} tokens</p>
+ 
           <p id="cmsg" className="need" aria-live="polite">
             {validationMsg}
           </p>
