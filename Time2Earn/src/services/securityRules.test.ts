@@ -211,6 +211,16 @@ export function evaluateFirestoreRule(
       }
       return false;
 
+    case 'public_leaderboard':
+      // Read authenticated; write admin only
+      if (operation === 'get' || operation === 'list') {
+        return isAuth;
+      }
+      if (operation === 'create' || operation === 'update' || operation === 'delete') {
+        return isAdmin;
+      }
+      return false;
+
     default:
       return false;
   }
@@ -260,6 +270,21 @@ export async function runSecurityTests(): Promise<boolean> {
   // 1. UNAUTHORIZED ADMIN ROUTE ACCESS & PRIVILEGED FUNCTION CALLS
   // ==========================================================================
   console.log('\n[1/11] Testing Unauthorized Admin Function Calls...');
+
+  // Route Guard Access & Mutual Exclusion Tests
+  function evaluateRouteAccess(role: 'admin' | 'user' | null, targetRoute: 'admin' | 'user'): { allowed: boolean; redirect?: string } {
+    if (!role) return { allowed: false, redirect: '/login' };
+    if (targetRoute === 'admin' && role !== 'admin') return { allowed: false, redirect: '/player' };
+    if (targetRoute === 'user' && role === 'admin') return { allowed: false, redirect: '/admin' };
+    return { allowed: true };
+  }
+  assertEqual('Route Guard: Unauthenticated redirected to login', evaluateRouteAccess(null, 'admin').redirect, '/login');
+  assertEqual('Route Guard: Player denied admin route', evaluateRouteAccess('user', 'admin').allowed, false);
+  assertEqual('Route Guard: Player redirected to /player from /admin', evaluateRouteAccess('user', 'admin').redirect, '/player');
+  assertEqual('Route Guard: Admin denied player route', evaluateRouteAccess('admin', 'user').allowed, false);
+  assertEqual('Route Guard: Admin redirected to /admin from /player', evaluateRouteAccess('admin', 'user').redirect, '/admin');
+  assertTrue('Route Guard: Player allowed player route', evaluateRouteAccess('user', 'user').allowed);
+  assertTrue('Route Guard: Admin allowed admin route', evaluateRouteAccess('admin', 'admin').allowed);
 
   // Update Config
   let errUpdateConfig = '';
@@ -847,6 +872,12 @@ export async function runSecurityTests(): Promise<boolean> {
   assertTrue('arcade_sessions: Player creates own attempt', evaluateFirestoreRule('arcade_sessions', 'as_1', 'create', { auth: { uid: playerUser.uid, role: 'user' }, requestResource: { data: { userId: playerUser.uid } } }));
   assertEqual('arcade_sessions: Player creating attempt for other blocked', evaluateFirestoreRule('arcade_sessions', 'as_2', 'create', { auth: { uid: playerUser.uid, role: 'user' }, requestResource: { data: { userId: otherPlayerUser.uid } } }), false);
   assertEqual('arcade_sessions: Player editing results directly blocked', evaluateFirestoreRule('arcade_sessions', 'as_1', 'update', { auth: { uid: playerUser.uid, role: 'user' } }), false);
+
+  // 13. public_leaderboard
+  assertTrue('public_leaderboard: Authenticated player reads leaderboard', evaluateFirestoreRule('public_leaderboard', 'user_1', 'get', { auth: { uid: playerUser.uid, role: 'user' } }));
+  assertEqual('public_leaderboard: Unauthenticated read blocked', evaluateFirestoreRule('public_leaderboard', 'user_1', 'get', { auth: null }), false);
+  assertTrue('public_leaderboard: Admin updates leaderboard', evaluateFirestoreRule('public_leaderboard', 'user_1', 'update', { auth: { uid: adminUser.uid, role: 'admin' } }));
+  assertEqual('public_leaderboard: Player write blocked', evaluateFirestoreRule('public_leaderboard', 'user_1', 'update', { auth: { uid: playerUser.uid, role: 'user' } }), false);
 
   // ==========================================================================
   // 10. AUTH EDGE CASES & USER ENUMERATION RESISTANCE

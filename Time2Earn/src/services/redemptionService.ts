@@ -423,6 +423,15 @@ export async function approveRedemptionRequest(
         rank: rankResult.currentRank,
       });
 
+      // 2b. Maintain public_leaderboard projection
+      const lbRef = doc(db, 'public_leaderboard', reqData.userId);
+      t.set(lbRef, {
+        username: reqData.username,
+        rank: rankResult.currentRank,
+        exp: newExp,
+        updatedAt: nowIso,
+      }, { merge: true });
+
       // 3. Set/Update cooldown if applicable
       const cooldownMins = Number(rewardData.cooldownMinutes ?? 0);
       if (cooldownMins > 0) {

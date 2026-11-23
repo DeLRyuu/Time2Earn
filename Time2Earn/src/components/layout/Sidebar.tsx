@@ -107,11 +107,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isAdmin = false }) => {
             <ArcadeIcon name="settings" />
             <span>Settings</span>
           </NavLink>
-
-          <div className="sp" />
-          <Link to="/player" className="staff">
-            Player view
-          </Link>
         </>
       ) : (
         <>

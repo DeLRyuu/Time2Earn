@@ -2,6 +2,33 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PlayerLayout } from './components/layout/PlayerLayout';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
+import { useAuth } from './hooks/useAuth';
+import { Skeleton } from './components/ui/Skeleton';
+
+// Root redirect based on authenticated user's actual role
+function RootRedirect() {
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ padding: '3rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '600px', margin: '0 auto' }}>
+        <Skeleton height="36px" width="50%" />
+        <Skeleton height="160px" />
+        <Skeleton height="80px" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return <Navigate to="/player" replace />;
+}
 
 // Player Pages
 import { Home } from './pages/player/Home';
@@ -31,8 +58,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Landing redirects to Player Home */}
-        <Route path="/" element={<Navigate to="/player" replace />} />
+        {/* Landing routes based on role */}
+        <Route path="/" element={<RootRedirect />} />
 
         {/* Public Auth & QR Routes */}
         <Route path="/login" element={<Login />} />

@@ -8,7 +8,7 @@ export interface AuthContextValue {
   isPlayer: boolean;
   loading: boolean;
   error: string | null;
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
   logout: () => void;
   updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   refreshUser: () => Promise<void>;

@@ -1,25 +1,29 @@
-node_modules
-dist
+# Dependencies & build output
+node_modules/
+dist/
 *.local
+
+# Vercel CLI local folder
+.vercel
 
 # Secrets & env
 .env
 .env.*
 !.env.example
 
-# Legacy data and source (contains real user data / passwords)
-legacy/*backup*
-legacy/**/*.json
-legacy/**/.env*
-
-# Firebase
+# Firebase local cache & admin keys (keep .firebaserc, firebase.json, firestore.rules, firestore.indexes.json tracked)
 .firebase/
 firebase-debug.log
+firestore-debug.log
+ui-debug.log
 serviceAccountKey*.json
 *-adminsdk-*.json
-legacy/
 
-# Personal Keep Files
+# Personal / reference folders not needed for Vercel build
 legacy/
 ui-ux-reference/
-file-structure.txt
+assets-reference/
+
+# Editor / OS junk
+.DS_Store
+Thumbs.db

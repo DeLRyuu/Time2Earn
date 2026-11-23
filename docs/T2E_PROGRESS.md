@@ -212,3 +212,39 @@
   - `docs/T2E_SECURITY_REPORT.md`: Audit matrix and security verification documentation.
   - `docs/reports/phase-17.md`: Phase 17 report.
 - **Open Issues / Notes:** Phase 17 complete. All security and abuse tests pass (93/93) with zero errors across linting and production builds. Ready for final review.
+
+## Phase 18: Live Data Recon, Safety & Schema Audit
+- **Status:** Completed
+- **What Exists:** Non-destructive live data audit of the production Firestore database (`playcred-fd217`) against TypeScript models across all 12 core collections. Created full lossless timestamp-preserving export to `legacy/backups/2026-11-22T12-20-54.469Z/` (905 documents, SHA-256 manifest). Audit report cataloged missing fields on `users` (`mustChangePassword`, `redeemStreak`, `streak`, `streakRecoveryCharges`, `totalSessions`, `totalCreditsEarned`) and `rewards` (`totalRedemptions`), identified Python space-formatted strings vs native Firestore Timestamps vs ISO strings, and confirmed 0 numeric string mismatches, 0 invalid passwords, and 0 duplicate usernames.
+- **Key Files:**
+  - `Time2Earn/scripts/backup.mjs`: Lossless Firestore export tool.
+  - `Time2Earn/scripts/audit.mjs`: Comprehensive schema & data discrepancy audit tool.
+  - `docs/reports/phase-18-data-audit.md`: Formal Phase 18 audit report.
+- **Open Issues / Notes:** Phase 18 complete. Zero business values modified.
+
+## Phase 19: Safe Schema Normalization & Lossless Verification
+- **Status:** Completed
+- **What Exists:** Idempotent, batch-written schema normalization (`npm run db:migrate -- --apply`) with automated rollback snapshot (`legacy/backups/2026-11-22T12-30-47.131Z-pre-migration/`). Normalized 1,184 timestamp fields across all 12 collections to standard ISO-8601 UTC strings (`YYYY-MM-DDTHH:mm:ss.sssZ`), preserving 100% of exact millisecond instants (`Math.round(nanos / 1e6)`). Injected neutral default fields (`mustChangePassword=false`, `isBanned=false`, `isRestricted=false`, `totalRedemptions=0`, `rejectNote=''`). Executed field-by-field verification (`npm run db:verify`) against baseline backup, confirming exactly 0 unexpected diffs across all 905 documents.
+- **Key Files:**
+  - `Time2Earn/scripts/migrate.mjs`: Idempotent batch-migration script with dry-run default.
+  - `Time2Earn/scripts/verify.mjs`: Automated field-by-field snapshot diff verification tool.
+  - `Time2Earn/scripts/restore.mjs`: Reversible disaster recovery restore utility.
+  - `docs/reports/phase-19-migration.md`: Detailed migration summary report.
+- **Open Issues / Notes:** Phase 19 complete. Live database normalized and verified.
+
+## Phase 20: Authentication Fix, Public Leaderboard & Live E2E Verification
+- **Status:** Completed
+- **What Exists:** Production Firebase Authentication migration and live end-to-end operational verification:
+  1. **Firebase Authentication Migration:** Deterministic `@time2earn.app` email mapping (`src/lib/authEmail.ts`). Migrated all 24 users to Firebase Auth (`npm run auth:migrate -- --apply`) with exact UID alignment and custom claim `{ role: 'admin' }` assigned to `Whindell_TheDev`. Rewrote `AuthContext.tsx` to use Firebase Auth SDK with persistent session and offline mock fallback.
+  2. **Public Leaderboard Projection:** Built `public_leaderboard` collection in Firestore backfilled with 23 active players (`scripts/backfill-leaderboard.mjs`). Updated services (`leaderboardService.ts`, `sessionService.ts`, `redemptionService.ts`, `arcadeService.ts`) to maintain live projections while preserving user privacy and security isolation.
+  3. **Production Security Rules Deployment:** Built direct REST deployment pipeline (`scripts/deploy-rules.mjs`) releasing hardened ruleset to `cloud.firestore`.
+  4. **Live End-to-End Verification:** Automated live test suite (`npm run test:live`) executing 10/10 assertions against `playcred-fd217`: player auth (`lois_123xx`), dashboard balance/rank/streak, cross-player read blocking (HTTP 403), balance tampering blocking (HTTP 403), public leaderboard read, atomic session approval & rollback, reward cooldown conventions (`${uid}_${rewardId}`), debt payment conversions (rate 0.4), and admin config audit logging.
+  5. **Operations Runbook:** Comprehensive documentation in `docs/T2E_FIRESTORE_RUNBOOK.md` detailing environment configuration, command lifecycle, disaster rollback, and key rotation.
+- **Key Files:**
+  - `Time2Earn/src/lib/authEmail.ts` & `Time2Earn/scripts/auth-migrate.mjs`: Firebase Auth sync engine.
+  - `Time2Earn/src/context/AuthContext.tsx`: Firebase Auth client provider.
+  - `Time2Earn/scripts/deploy-rules.mjs`: Cloud Firestore ruleset deployment pipeline.
+  - `Time2Earn/scripts/verify-live-e2e.mjs`: Live 10-point E2E verification test suite (`npm run test:live`).
+  - `docs/reports/phase-20-live-e2e.md`: Live E2E test report and checklist.
+  - `docs/T2E_FIRESTORE_RUNBOOK.md`: Complete operations and disaster recovery runbook.
+- **Open Issues / Notes:** All phases complete. Ready for final review.

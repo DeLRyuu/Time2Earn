@@ -13,7 +13,7 @@ export const NotFound: React.FC = () => {
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
           The requested coordinate does not exist in the Time2Earn grid.
         </p>
-        <Link to="/player">
+        <Link to="/">
           <Button variant="primary" size="md">RETURN TO BASE</Button>
         </Link>
       </Card>

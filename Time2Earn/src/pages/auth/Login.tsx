@@ -1,14 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 import { ArcadeIcon } from '../../components/ui/ArcadeIcon';
-import {
-  consumePrefillLogin,
-  getRegisteredUsers,
-  removeRegisteredUser,
-  type RegisteredUser,
-} from './authRegistration';
+import { consumePrefillLogin } from './authRegistration';
 import webIconImg from '../../assets/sidebar/web-icon.png';
 import tokenCoinImg from '../../assets/token/token-coin.png';
 import streakImg from '../../assets/streak/streak.png';
@@ -16,25 +11,27 @@ import prizeShopImg from '../../assets/sidebar/prize-shop.png';
 import './AuthPages.css';
 
 export const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, user, isAuthenticated, isAdmin, loading: authLoading } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [prefill] = useState(() => consumePrefillLogin());
+  const [username, setUsername] = useState(() => prefill?.username || '');
+  const [password, setPassword] = useState(() => prefill?.password || '');
   const [showPassword, setShowPassword] = useState(false);
-  const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    setRegisteredUsers(getRegisteredUsers());
-    const prefill = consumePrefillLogin();
-    if (prefill) {
-      setUsername(prefill.username);
-      setPassword(prefill.password);
+  // If already authenticated, redirect to the appropriate portal
+  React.useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      if (user.role === 'admin' || isAdmin) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/player', { replace: true });
+      }
     }
-  }, []);
+  }, [authLoading, isAuthenticated, isAdmin, user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,11 +48,12 @@ export const Login: React.FC = () => {
     setIsLoading(false);
 
     if (res.success) {
-      showToast(`Welcome back, ${cleanUsername}!`, 'success');
-      if (cleanUsername.toLowerCase() === 'admin') {
-        navigate('/admin');
+      const authUser = res.user;
+      showToast(`Welcome back, ${authUser?.username || cleanUsername}!`, 'success');
+      if (authUser?.role === 'admin') {
+        navigate('/admin', { replace: true });
       } else {
-        navigate('/player');
+        navigate('/player', { replace: true });
       }
     } else {
       setErrorMessage(res.error || 'Login failed. Please check your credentials.');
@@ -63,22 +61,6 @@ export const Login: React.FC = () => {
     }
   };
 
-  const handleQuickFill = (user: string, pass: string) => {
-    setUsername(user);
-    setPassword(pass);
-    setErrorMessage(null);
-  };
-
-  const handleDeleteRegisteredUser = (e: React.MouseEvent, userToDelete: string) => {
-    e.stopPropagation();
-    removeRegisteredUser(userToDelete);
-    setRegisteredUsers(getRegisteredUsers());
-    if (username.toLowerCase() === userToDelete.toLowerCase()) {
-      setUsername('');
-      setPassword('');
-    }
-    showToast(`Removed ${userToDelete} from saved roster.`, 'info');
-  };
 
   return (
     <div className="auth-page">
@@ -142,7 +124,7 @@ export const Login: React.FC = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="e.g. lois_123xx"
+                  placeholder="Username"
                   autoComplete="username"
                   required
                   className="auth-input"
@@ -172,8 +154,9 @@ export const Login: React.FC = () => {
                   onClick={() => setShowPassword((prev) => !prev)}
                   title={showPassword ? 'Hide password' : 'Show password'}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
                 >
-                  <ArcadeIcon name={showPassword ? 'clock' : 'key'} size={18} />
+                  <ArcadeIcon name={showPassword ? 'eye-off' : 'eye'} size={18} />
                 </button>
               </div>
             </div>
@@ -184,37 +167,11 @@ export const Login: React.FC = () => {
               className="auth-submit-btn"
               disabled={isLoading}
             >
-              <span>{isLoading ? 'ACCESSING CONSOLE...' : 'LOGIN'}</span>
+              <span>{isLoading ? 'SIGNING IN...' : 'LOGIN'}</span>
             </button>
           </form>
         </div>
-
-        {/* Quick Demo Test Stations */}
-        <div className="auth-drawer">
-          <div className="auth-drawer-title">
-            <span>Demo Stations (1-Click)</span>
-            <span className="auth-drawer-count">Offline Ready</span>
-          </div>
-          <div className="auth-demo-grid">
-            <button
-              type="button"
-              className="auth-demo-btn"
-              onClick={() => handleQuickFill('lois_123xx', 'password123')}
-            >
-              <span className="auth-demo-badge">Player Console</span>
-              <span className="auth-demo-sub">lois_123xx (Gamer)</span>
-            </button>
-            <button
-              type="button"
-              className="auth-demo-btn"
-              onClick={() => handleQuickFill('admin', 'adminpassword123')}
-            >
-              <span className="auth-demo-badge" style={{ color: 'var(--v)' }}>Staff Admin</span>
-              <span className="auth-demo-sub">admin (Full Access)</span>
-            </button>
-          </div>
-        </div>
-
+        
         {/* Feature Highlights Row using Project Assets */}
         <div className="auth-perks-row">
           <div className="auth-perk-item">

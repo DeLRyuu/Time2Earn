@@ -40,8 +40,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Player attempting to access admin route is blocked and redirected to player portal
   if (requiredRole === 'admin' && !isAdmin) {
     return <Navigate to="/player" replace />;
+  }
+
+  // Admin attempting to access player route is redirected to admin console
+  if (requiredRole === 'user' && isAdmin) {
+    return <Navigate to="/admin" replace />;
   }
 
   return (

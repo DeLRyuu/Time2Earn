@@ -122,7 +122,7 @@ export async function fetchPublicLeaderboard(
   if (hasValidFirebaseConfig && db) {
     try {
       const q = query(
-        collection(db, 'users'),
+        collection(db, 'public_leaderboard'),
         orderBy('exp', 'desc'),
         limit(safeLimit + 5)
       );
@@ -131,14 +131,12 @@ export async function fetchPublicLeaderboard(
 
       snapshot.forEach((snap) => {
         const d = snap.data();
-        if (!d.isBanned && d.role !== 'admin') {
-          docs.push({
-            userId: snap.id,
-            username: d.username || 'Anonymous Player',
-            rank: d.rank || 'Newbie',
-            exp: typeof d.exp === 'number' ? d.exp : 0,
-          });
-        }
+        docs.push({
+          userId: snap.id,
+          username: d.username || 'Anonymous Player',
+          rank: d.rank || 'Newbie',
+          exp: typeof d.exp === 'number' ? d.exp : 0,
+        });
       });
 
       if (docs.length > 0) {

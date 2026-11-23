@@ -145,7 +145,7 @@ export const Register: React.FC = () => {
           <div className="auth-card-banner">
             <div className="auth-card-banner-title">
               <ArcadeIcon name="user" size={20} />
-              <span>Create Player Card</span>
+              <span>Register and Earn</span>
             </div>
           </div>
 
@@ -168,7 +168,7 @@ export const Register: React.FC = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="e.g. cyber_ninja99"
+                  placeholder="Username"
                   autoComplete="username"
                   maxLength={20}
                   required
@@ -239,8 +239,9 @@ export const Register: React.FC = () => {
                   onClick={() => setShowPassword((prev) => !prev)}
                   title={showPassword ? 'Hide password' : 'Show password'}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
                 >
-                  <ArcadeIcon name={showPassword ? 'clock' : 'key'} size={18} />
+                  <ArcadeIcon name={showPassword ? 'eye-off' : 'eye'} size={18} />
                 </button>
               </div>
             </div>
@@ -261,6 +262,16 @@ export const Register: React.FC = () => {
                   required
                   className="auth-input"
                 />
+                <button
+                  type="button"
+                  className="auth-input-icon-btn"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                >
+                  <ArcadeIcon name={showPassword ? 'eye-off' : 'eye'} size={18} />
+                </button>
               </div>
             </div>
 

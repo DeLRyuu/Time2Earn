@@ -1,5 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getAuth, type Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'mock-api-key',
@@ -10,14 +11,17 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:123456789:web:abcdef',
 };
 
-// Check if valid environment variables exist
+// Check if valid environment variables exist (bypassed in test mode for mock verification)
 export const hasValidFirebaseConfig = Boolean(
+  import.meta.env.MODE !== 'test' &&
   import.meta.env.VITE_FIREBASE_API_KEY &&
+  import.meta.env.VITE_FIREBASE_API_KEY !== 'PASTE_FROM_FIREBASE_CONSOLE' &&
   import.meta.env.VITE_FIREBASE_PROJECT_ID
 );
 
 let app: FirebaseApp;
 let db: Firestore;
+let auth: Auth;
 
 try {
   if (getApps().length === 0) {
@@ -26,11 +30,13 @@ try {
     app = getApps()[0];
   }
   db = getFirestore(app);
+  auth = getAuth(app);
 } catch (err) {
   console.warn('Firebase initialization warning:', err);
   // Fallback app if duplicate or invalid
   app = getApps()[0] || initializeApp(firebaseConfig, 'time2earn-fallback');
   db = getFirestore(app);
+  auth = getAuth(app);
 }
 
-export { app, db };
+export { app, db, auth };

@@ -360,6 +360,15 @@ export async function submitArcadeSession(
         rank: rankResult.currentRank,
       });
 
+      // 2b. Maintain public_leaderboard projection
+      const lbRef = doc(db, 'public_leaderboard', user.uid);
+      transaction.set(lbRef, {
+        username: userData.username,
+        rank: rankResult.currentRank,
+        exp: newTotalExp,
+        updatedAt: nowIso,
+      }, { merge: true });
+
       // 3. Create credit_transactions audit record
       if (rewardCalc.creditsAwarded > 0) {
         const txRef = doc(collection(db, 'credit_transactions'));

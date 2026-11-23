@@ -363,6 +363,15 @@ export async function approveSessionRequest(
         rank: rankResult.currentRank,
       });
 
+      // 2b. Maintain public_leaderboard projection
+      const lbRef = doc(db, 'public_leaderboard', sessionData.userId);
+      transaction.set(lbRef, {
+        username: sessionData.username,
+        rank: rankResult.currentRank,
+        exp: updatedExp,
+        updatedAt: nowIso,
+      }, { merge: true });
+
       // 3. Create credit_transactions audit record
       const txRef = doc(collection(db, 'credit_transactions'));
       transaction.set(txRef, {
