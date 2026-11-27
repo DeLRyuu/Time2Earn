@@ -315,3 +315,14 @@
   - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and mount switch.
   - `docs/reports/phase-22.md`: Phase 22 report.
 - **Open Issues / Notes:** Ready for Phase D (Target Hunter canvas aim cabinet).
+
+## Phase 23: Target Hunter Cabinet (Phase D)
+- **Status:** Completed
+- **What Exists:** Third playable arcade cabinet! Built 30-second canvas aim game (`TargetHunter.tsx`) using `useGameLoop`, 5 target types (normal, small, moving, golden, fake), pointer event click/tap detection, combo multipliers, auto-clicker rejection (`rewards.ts`), unit tests (`logic.test.ts`), and mounted into `Arcade.tsx` with `'playable'` status in `registry.ts`.
+- **Key Files:**
+  - `Time2Earn/src/arcade/games/target-hunter/TargetHunter.tsx` & `.css`: 30-second canvas aim game component.
+  - `Time2Earn/src/arcade/games/target-hunter/logic.ts` & `logic.test.ts`: Target specs, combo scaling, circle collisions, and auto-clicker tests.
+  - `Time2Earn/src/arcade/rewards.ts`: Authoritative token tiers (Dead-Eye Legend 5 down to 0) and anti-cheat bounds.
+  - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and mount switch.
+  - `docs/reports/phase-23.md`: Phase 23 report.
+- **Open Issues / Notes:** Ready for Phase E (Color Clash Stroop-style cabinet).

@@ -59,14 +59,15 @@ export function runRegistryTests(): void {
   assertEqual(getGameDef('keyboard-ninja')?.dailyTokenCap, 10, 'Keyboard Ninja cap 10');
   assertEqual(getGameDef('ball-bounce')?.dailyTokenCap, 6, 'Ball Bounce cap 6');
 
-  // 5. Initial game statuses: reaction-rush and keyboard-ninja are playable, rest coming-soon
+  // 5. Initial game statuses: reaction-rush, keyboard-ninja, and target-hunter are playable
+  const playableIds = new Set(['reaction-rush', 'keyboard-ninja', 'target-hunter']);
   for (const game of ARCADE_GAMES) {
-    if (game.id === 'reaction-rush' || game.id === 'keyboard-ninja') {
+    if (playableIds.has(game.id)) {
       assertEqual(game.status, 'playable', `${game.name} is playable`);
     } else {
       assertEqual(game.status, 'coming-soon', `Game ${game.id} should be coming-soon`);
     }
   }
 
-  console.log('PASS: Arcade Registry Tests (8 games verified, unique IDs, caps > 0, 2 cabinets playable)');
+  console.log('PASS: Arcade Registry Tests (8 games verified, unique IDs, caps > 0, 3 cabinets playable)');
 }

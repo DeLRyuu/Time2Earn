@@ -105,12 +105,45 @@ export const GAME_REWARD_RULES: Record<ArcadeGameId, GameRewardRuleFn> = {
     };
   },
   'target-hunter': (result) => {
-    // Placeholder click score tiers
-    const rawTokens = result.score >= 80 ? 3 : result.score >= 40 ? 2 : result.score >= 20 ? 1 : 0;
+    // Rewards: accuracy>=92 && score>=120 => 5 tokens; >=85 && >=80 => 3; >=70 && >=40 => 2; >=50 => 1; else 0.
+    // arcadeScore = score * 10
+    // Reject accuracy 100% with hits > 90 (auto-clicker) and hits/sec > 6.
+    const hits = result.performance.hits ?? 0;
+    const acc = result.performance.accuracy ?? 0;
+    const durationSec = Math.max(1, result.durationMs / 1000);
+    const hitsPerSec = hits / durationSec;
+
+    if (acc >= 100 && hits > 90) {
+      throw new Error(`Suspicious perfect accuracy detected: 100% accuracy with ${hits} hits (auto-clicker limit is 90)`);
+    }
+    if (hitsPerSec > 6) {
+      throw new Error(`Suspicious click rate detected: ${hitsPerSec.toFixed(1)} hits/sec (limit is 6 hits/sec)`);
+    }
+
+    let rawTokens: number;
+    let tierLabel: string;
+
+    if (acc >= 92 && result.score >= 120) {
+      rawTokens = 5;
+      tierLabel = 'Dead-Eye Legend';
+    } else if (acc >= 85 && result.score >= 80) {
+      rawTokens = 3;
+      tierLabel = 'Master Sharpshooter';
+    } else if (acc >= 70 && result.score >= 40) {
+      rawTokens = 2;
+      tierLabel = 'Marksman';
+    } else if (acc >= 50) {
+      rawTokens = 1;
+      tierLabel = 'Scout';
+    } else {
+      rawTokens = 0;
+      tierLabel = 'Novice Hunter';
+    }
+
     return {
       rawTokens,
       exp: 2 + rawTokens * 2,
-      tierLabel: rawTokens >= 3 ? 'Sharpshooter' : 'Marksman',
+      tierLabel,
     };
   },
   'keyboard-ninja': (result) => {

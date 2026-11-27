@@ -79,7 +79,7 @@ export const ARCADE_GAMES: ArcadeGameDef[] = [
     tagline: 'Fast-paced canvas target clicking and combo aim',
     icon: 'joystick',
     color: 'var(--y)',
-    status: 'coming-soon',
+    status: 'playable',
     modes: ['classic'],
     minDurationMs: 10000,
     maxDurationMs: 60000,
