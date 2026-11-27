@@ -9,7 +9,7 @@ export const ARCADE_GAMES: ArcadeGameDef[] = [
     tagline: 'High-speed 3-lane time trial across Cyber City',
     icon: 'gamepad',
     color: 'var(--y)',
-    status: 'coming-soon',
+    status: 'playable',
     modes: ['time-trial', 'token-run'],
     minDurationMs: 15000,
     maxDurationMs: 180000,

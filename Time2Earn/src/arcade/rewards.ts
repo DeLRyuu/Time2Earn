@@ -22,14 +22,59 @@ export type GameRewardRuleFn = (result: GameResult) => GameRewardRuleOutput;
  */
 export const GAME_REWARD_RULES: Record<ArcadeGameId, GameRewardRuleFn> = {
   time2rush: (result) => {
-    // Placeholder: completed track yields 3 base tokens + 2 for score tiers
-    const completed = result.performance.completed ?? (result.score > 0 ? 1 : 0);
-    if (!completed) return { rawTokens: 0, exp: 2, tierLabel: 'DNF' };
-    const rawTokens = result.score >= 5000 ? 5 : result.score >= 2000 ? 3 : 2;
+    // Phase F2: Time2Rush reward rule
+    // performance: { finishTimeMs, pickupsScore, tokenPickups, collisions, completed, trackRecordMs, trackLengthM }
+    // finished => base 3; finish under track record => +2; pickupsScore tiers +0..+5; DNF => 0 tokens, EXP 2.
+    // Cap at 15 raw tokens. Validate finishTimeMs >= theoretical minimum (trackLength / MAX_SPEED).
+    const completed = Boolean(result.performance.completed);
+    if (!completed) {
+      return { rawTokens: 0, exp: 2, tierLabel: 'DNF' };
+    }
+
+    const finishTimeMs = result.performance.finishTimeMs ?? result.durationMs;
+    const trackLengthM = result.performance.trackLengthM ?? 1000;
+    // Theoretical minimum time at max speed (26 m/s)
+    const minPossibleMs = (trackLengthM / 26.0) * 1000;
+    if (finishTimeMs < minPossibleMs - 50) {
+      throw new Error(`Implausible finish time: ${finishTimeMs}ms (theoretical minimum is ${Math.round(minPossibleMs)}ms)`);
+    }
+
+    let tokens = 3; // base for completing track
+
+    // Track record bonus (+2)
+    const trackRecordMs = result.performance.trackRecordMs;
+    if (typeof trackRecordMs === 'number' && trackRecordMs > 0 && finishTimeMs < trackRecordMs) {
+      tokens += 2;
+    }
+
+    // Pickups score tiers (+0..+5)
+    const pickupsScore = result.performance.pickupsScore ?? result.score;
+    let pickupBonus = 0;
+    if (pickupsScore >= 1200) {
+      pickupBonus = 5;
+    } else if (pickupsScore >= 800) {
+      pickupBonus = 4;
+    } else if (pickupsScore >= 500) {
+      pickupBonus = 3;
+    } else if (pickupsScore >= 250) {
+      pickupBonus = 2;
+    } else if (pickupsScore >= 100) {
+      pickupBonus = 1;
+    }
+    tokens += pickupBonus;
+
+    // Never award more than 15 raw tokens per run
+    const rawTokens = Math.min(15, tokens);
+
+    let tierLabel = 'Cyber Finisher';
+    if (rawTokens >= 10) tierLabel = 'Track Legend';
+    else if (rawTokens >= 8) tierLabel = 'Hyper Driver';
+    else if (rawTokens >= 5) tierLabel = 'Neon Speeder';
+
     return {
       rawTokens,
-      exp: 10 + rawTokens * 2,
-      tierLabel: result.score >= 5000 ? 'Gold Racer' : 'Silver Racer',
+      exp: 10 + rawTokens * 3,
+      tierLabel,
     };
   },
   'endless-run': (result) => {

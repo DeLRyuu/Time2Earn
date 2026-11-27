@@ -11,15 +11,19 @@ import { useInput } from '../useInput';
 export interface RunnerCanvasProps {
   seed: number;
   initialLives?: number;
+  maxDistance?: number; // Optional track length (e.g. 1000m for Time2Rush). Completes at this mark.
+  shortcutMode?: boolean; // When true, shortcut lane (lane 2) spawns high-value diamonds/crystals with harder obstacles
   paused?: boolean;
-  onGameOver?: (state: RunnerState, inputLog: RecordedInput[]) => void;
-  onProgress?: (distance: number, score: number) => void;
+  onGameOver?: (state: RunnerState, inputLog: RecordedInput[], completed: boolean) => void;
+  onProgress?: (distance: number, score: number, speed: number) => void;
   ghostInputs?: RecordedInput[];
 }
 
 export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
   seed,
   initialLives = 3,
+  maxDistance,
+  shortcutMode = false,
   paused = false,
   onGameOver,
   onProgress,
@@ -40,7 +44,9 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
 
   // Ghost tracking
   const ghostIndexRef = useRef<number>(0);
-  const ghostStateRef = useRef<RunnerState | null>(ghostInputs ? createInitialRunnerState(initialLives) : null);
+  const ghostStateRef = useRef<RunnerState | null>(null);
+  const ghostObstaclesRef = useRef<Obstacle[]>([]);
+  const ghostPickupsRef = useRef<PickupItem[]>([]);
 
   // Time accumulator for fixed 60Hz step
   const lastTimeRef = useRef<number>(0);
@@ -60,28 +66,43 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
     nextSpawnZRef.current = 30;
     rngRef.current = createMulberry32(seed);
     gameOverHandledRef.current = false;
-    lastTimeRef.current = performance.now();
+    lastTimeRef.current = 0;
     accumulatorRef.current = 0;
 
     if (ghostInputs && ghostInputs.length > 0) {
       ghostIndexRef.current = 0;
       ghostStateRef.current = createInitialRunnerState(initialLives);
+      ghostObstaclesRef.current = [];
+      ghostPickupsRef.current = [];
     } else {
       ghostStateRef.current = null;
     }
 
     // Pre-populate initial 120m track
-    while (nextSpawnZRef.current < 150) {
+    const limit = maxDistance ? Math.min(150, maxDistance) : 150;
+    while (nextSpawnZRef.current < limit) {
       const z = nextSpawnZRef.current;
-      const pattern = generateObstaclePattern(z, rngRef.current);
+      const pattern = generateObstaclePattern(z, rngRef.current, shortcutMode ? 1.4 : 1.0);
       obstaclesRef.current.push(...pattern.obstacles);
+
+      // In shortcut mode, lane 2 holds bonus diamonds/crystals
+      if (shortcutMode && pattern.passableLanes.includes(2)) {
+        pickupsRef.current.push({
+          id: `shortcut_${z}_diamond`,
+          type: 'diamond',
+          lane: 2,
+          z: z + 6,
+          scoreValue: 25,
+          isPowerUp: false,
+        });
+      }
 
       const items = generatePickups(z + 8, pattern.passableLanes[0] ?? 1, rngRef.current);
       pickupsRef.current.push(...items);
 
       nextSpawnZRef.current += 24;
     }
-  }, [seed, initialLives, ghostInputs]);
+  }, [seed, initialLives, maxDistance, shortcutMode, ghostInputs]);
 
   useEffect(() => {
     initEngine();
@@ -102,8 +123,12 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
     if ((pressed.has('ArrowRight') || pressed.has('KeyD')) && !prev.has('ArrowRight') && !prev.has('KeyD')) {
       actions.push('laneRight');
     }
-    if ((pressed.has('ArrowUp') || pressed.has('KeyW') || pressed.has('Space')) &&
-        !prev.has('ArrowUp') && !prev.has('KeyW') && !prev.has('Space')) {
+    if (
+      (pressed.has('ArrowUp') || pressed.has('KeyW') || pressed.has('Space')) &&
+      !prev.has('ArrowUp') &&
+      !prev.has('KeyW') &&
+      !prev.has('Space')
+    ) {
       actions.push('jump');
     }
     if ((pressed.has('ArrowDown') || pressed.has('KeyS')) && !prev.has('ArrowDown') && !prev.has('KeyS')) {
@@ -160,16 +185,16 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
         ctx.stroke();
       }
 
-      // Draw track crossbars for speed illusion
+      // Track crossbars for speed illusion
       const playerDist = stateRef.current.distance;
-      const stripeOffset = (playerDist % 4);
+      const stripeOffset = playerDist % 4;
       ctx.strokeStyle = '#15203b';
       for (let z = 0; z < 40; z += 4) {
         const lineZ = z - stripeOffset;
         if (lineZ < 0) continue;
         const progress = lineZ / 40;
         const y = horizonY + (height - horizonY) * Math.pow(1 - progress, 2);
-        const w = (width * 0.96) * Math.pow(1 - progress, 1.8);
+        const w = width * 0.96 * Math.pow(1 - progress, 1.8);
         ctx.beginPath();
         ctx.moveTo(centerX - w / 2, y);
         ctx.lineTo(centerX + w / 2, y);
@@ -180,12 +205,27 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
       const project = (lanePos: number, zDist: number, elev: number = 0) => {
         const deltaZ = zDist - playerDist;
         if (deltaZ < 0 || deltaZ > 45) return null;
-        const factor = 1 - (deltaZ / 45);
+        const factor = 1 - deltaZ / 45;
         const scale = Math.pow(factor, 2.2);
         const screenX = centerX + (lanePos - 1) * (width * 0.22) * scale;
-        const screenY = horizonY + (height - horizonY) * scale - (elev * 35 * scale);
+        const screenY = horizonY + (height - horizonY) * scale - elev * 35 * scale;
         return { x: screenX, y: screenY, scale };
       };
+
+      // Draw Finish Line if in view
+      if (maxDistance && maxDistance - playerDist <= 45 && maxDistance >= playerDist) {
+        const finishPt = project(1, maxDistance, 0);
+        if (finishPt) {
+          const w = width * 0.8 * finishPt.scale;
+          ctx.save();
+          ctx.fillStyle = '#fffa00';
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 2;
+          ctx.fillRect(finishPt.x - w / 2, finishPt.y - 4 * finishPt.scale, w, 8 * finishPt.scale);
+          ctx.strokeRect(finishPt.x - w / 2, finishPt.y - 4 * finishPt.scale, w, 8 * finishPt.scale);
+          ctx.restore();
+        }
+      }
 
       // Draw Pickups
       for (const p of pickupsRef.current) {
@@ -211,7 +251,6 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
           ctx.closePath();
           ctx.fill();
         } else {
-          // Power-up icon (cube box)
           ctx.fillStyle = '#ffaa00';
           ctx.fillRect(-size / 2, -size / 2, size, size);
         }
@@ -223,14 +262,31 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
         const pt = project(obs.lane, obs.z, 0);
         if (!pt) continue;
 
-        const w = (width * 0.18) * pt.scale;
+        const w = width * 0.18 * pt.scale;
         const h = obs.type === 'barricade' ? 24 * pt.scale : 40 * pt.scale;
         ctx.fillStyle = obs.type === 'barricade' ? '#ff3366' : obs.type === 'low-barrier' ? '#ffcc00' : '#9933ff';
         const drawY = obs.type === 'low-barrier' ? pt.y - 30 * pt.scale : pt.y - h;
         ctx.fillRect(pt.x - w / 2, drawY, w, h);
       }
 
-      // Draw Player
+      // Draw Ghost Runner (if active and nearby)
+      if (ghostStateRef.current) {
+        const gState = ghostStateRef.current;
+        const gLane = gState.lane + (gState.targetLane - gState.lane) * gState.laneTransitionProgress;
+        const ghostPt = project(gLane, gState.distance, gState.y);
+        if (ghostPt) {
+          const gSize = 28 * ghostPt.scale;
+          const gH = gState.sliding ? gSize * 0.45 : gSize;
+          ctx.save();
+          ctx.globalAlpha = 0.35;
+          ctx.translate(ghostPt.x, ghostPt.y - gH);
+          ctx.fillStyle = '#ff00ff'; // Neon magenta translucent ghost
+          ctx.fillRect(-gSize / 2, 0, gSize, gH);
+          ctx.restore();
+        }
+      }
+
+      // Draw Main Player
       const pState = stateRef.current;
       const effectiveLane = pState.lane + (pState.targetLane - pState.lane) * pState.laneTransitionProgress;
       const playerPt = project(effectiveLane, playerDist, pState.y);
@@ -259,6 +315,9 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
     };
 
     const loop = (now: number) => {
+      if (lastTimeRef.current === 0) {
+        lastTimeRef.current = now;
+      }
       const deltaSec = (now - lastTimeRef.current) / 1000;
       lastTimeRef.current = now;
 
@@ -274,10 +333,22 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
           pendingActionsRef.current = [];
 
           // Spawning ahead
-          if (nextSpawnZRef.current - stateRef.current.distance < 120) {
+          const spawnLimit = maxDistance ?? Infinity;
+          if (nextSpawnZRef.current - stateRef.current.distance < 120 && nextSpawnZRef.current < spawnLimit) {
             const z = nextSpawnZRef.current;
-            const pattern = generateObstaclePattern(z, rngRef.current);
+            const pattern = generateObstaclePattern(z, rngRef.current, shortcutMode ? 1.4 : 1.0);
             obstaclesRef.current.push(...pattern.obstacles);
+
+            if (shortcutMode && pattern.passableLanes.includes(2)) {
+              pickupsRef.current.push({
+                id: `shortcut_${z}_diamond`,
+                type: 'diamond',
+                lane: 2,
+                z: z + 6,
+                scoreValue: 25,
+                isPowerUp: false,
+              });
+            }
 
             const items = generatePickups(z + 8, pattern.passableLanes[0] ?? 1, rngRef.current);
             pickupsRef.current.push(...items);
@@ -293,18 +364,47 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
             pickupsRef.current
           );
 
-          stateRef.current = nextState;
+          // Check track completion
+          let completed = false;
+          let finalState = nextState;
+          if (maxDistance && nextState.distance >= maxDistance) {
+            completed = true;
+            finalState = { ...nextState, isGameOver: true };
+          }
+
+          stateRef.current = finalState;
           obstaclesRef.current = remainingObstacles;
           pickupsRef.current = remainingPickups;
 
-          if (onProgress) {
-            onProgress(nextState.distance, nextState.score);
+          // Step ghost runner if present
+          if (ghostStateRef.current && ghostInputs) {
+            const gTime = ghostStateRef.current.timeElapsedMs;
+            const gActions: RunnerAction[] = [];
+            while (
+              ghostIndexRef.current < ghostInputs.length &&
+              (ghostInputs[ghostIndexRef.current]?.t ?? 0) <= gTime
+            ) {
+              const item = ghostInputs[ghostIndexRef.current];
+              if (item) gActions.push(item.action);
+              ghostIndexRef.current++;
+            }
+            const gStep = stepRunner(
+              ghostStateRef.current,
+              gActions,
+              ghostObstaclesRef.current,
+              ghostPickupsRef.current
+            );
+            ghostStateRef.current = gStep.nextState;
           }
 
-          if (nextState.isGameOver && !gameOverHandledRef.current) {
+          if (onProgress) {
+            onProgress(finalState.distance, finalState.score, finalState.speed);
+          }
+
+          if (finalState.isGameOver && !gameOverHandledRef.current) {
             gameOverHandledRef.current = true;
             if (onGameOver) {
-              onGameOver(nextState, inputLogRef.current);
+              onGameOver(finalState, inputLogRef.current, completed);
             }
           }
         }
@@ -322,13 +422,12 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
       animId = requestAnimationFrame(loop);
     };
 
-    lastTimeRef.current = performance.now();
     animId = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [paused, onGameOver, onProgress]);
+  }, [paused, maxDistance, shortcutMode, ghostInputs, onGameOver, onProgress]);
 
   return (
     <div

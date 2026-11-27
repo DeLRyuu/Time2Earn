@@ -349,3 +349,14 @@
   - `Time2Earn/src/arcade/engine/runner/runner.test.ts`: Determinism, passable pattern, and timer countdown tests.
   - `Time2Earn/docs/reports/phase-25.md`: Phase 25 report.
 - **Open Issues / Notes:** Ready for Phase F2 (Time2Rush game cabinet wrapper).
+
+## Phase 26: Time2Rush Cabinet (Phase F2)
+- **Status:** Completed
+- **What Exists:** High-speed 3-lane time trial arcade game cabinet (`Time2Rush.tsx`) built atop the runner engine. Features Time Trial and Token Run (risky shortcut lane) modes, daily deterministic track seeding, translucent ghost playback from local run logs, authoritative reward tiers (base 3, record +2, pickup tiers +0..+5, max 15 raw tokens) with theoretical minimum-time anti-cheat validation, unit test suite (`logic.test.ts`), and set to `'playable'` in `registry.ts`.
+- **Key Files:**
+  - `Time2Earn/src/arcade/games/time2rush/Time2Rush.tsx` & `.css`: Time2Rush game cabinet UI with mode selection and in-game HUD.
+  - `Time2Earn/src/arcade/games/time2rush/logic.ts` & `logic.test.ts`: Daily track seeding, ghost/PB storage, anti-cheat validation, and reward tier tests.
+  - `Time2Earn/src/arcade/rewards.ts`: Authoritative Time2Rush reward rule and theoretical min-time enforcement.
+  - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled Time2Rush cabinet in registry and lobby mount switch.
+  - `Time2Earn/docs/reports/phase-26.md`: Phase 26 report.
+- **Open Issues / Notes:** Ready for Phase G (Endless Run cabinet).

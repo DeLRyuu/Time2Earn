@@ -22,6 +22,7 @@ import { ReactionRush } from '../../arcade/games/reaction-rush/ReactionRush';
 import { KeyboardNinja } from '../../arcade/games/keyboard-ninja/KeyboardNinja';
 import { TargetHunter } from '../../arcade/games/target-hunter/TargetHunter';
 import { ColorClash } from '../../arcade/games/color-clash/ColorClash';
+import { Time2Rush } from '../../arcade/games/time2rush/Time2Rush';
 import './Arcade.css';
 
 export const Arcade: React.FC = () => {
@@ -161,6 +162,8 @@ export const Arcade: React.FC = () => {
         return <TargetHunter onFinish={handleGameFinish} />;
       case 'color-clash':
         return <ColorClash onFinish={handleGameFinish} />;
+      case 'time2rush':
+        return <Time2Rush onComplete={handleGameFinish} />;
       default:
         return (
           <div className="arcade-empty" style={{ margin: '20px 0' }}>
