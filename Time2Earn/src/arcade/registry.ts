@@ -107,7 +107,7 @@ export const ARCADE_GAMES: ArcadeGameDef[] = [
     tagline: 'Physics-based gravity hop through neon hoops and gaps',
     icon: 'coin',
     color: 'var(--v)',
-    status: 'coming-soon',
+    status: 'playable',
     modes: ['classic'],
     minDurationMs: 5000,
     maxDurationMs: 300000,

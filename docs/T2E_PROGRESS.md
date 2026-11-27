@@ -383,3 +383,14 @@
   - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and lobby mount switch.
   - `Time2Earn/docs/reports/phase-28.md`: Phase 28 report.
 - **Open Issues / Notes:** Ready for Phase I (Ball Bounce physics cabinet).
+
+## Phase 29: Ball Bounce Cabinet (Phase I)
+- **Status:** Completed
+- **What Exists:** Physics-based gravity hop arcade game cabinet (`BallBounce.tsx`) built with custom deterministic 60Hz physics. Features tap/click/Space hop, moving platforms with narrowing gaps, target pickups (Hoops +10, Stars +5, Rare Gems +25, Bombs resetting multiplier, Token pickups max 3), Perfect Bounce multiplier (x1..x5), 3-minute token eligibility cutoff (score only thereafter), authoritative rewards (score 100=1, 300=2, 600=3 + tokenPickups, cap 6/day), rate-based anti-cheat validation, unit test suite (`physics.test.ts`), and set to `'playable'` in `registry.ts`.
+- **Key Files:**
+  - `Time2Earn/src/arcade/games/ball-bounce/physics.ts` & `physics.test.ts`: Gravity hop physics, platform collisions, target collection, and unit tests.
+  - `Time2Earn/src/arcade/games/ball-bounce/BallBounce.tsx` & `.css`: Cabinet UI, interactive canvas, 3-min eligibility badge, and HUD.
+  - `Time2Earn/src/arcade/rewards.ts`: Authoritative Ball Bounce score/pickup reward tiers and anti-cheat rate check.
+  - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and lobby mount switch.
+  - `Time2Earn/docs/reports/phase-29.md`: Phase 29 report.
+- **Open Issues / Notes:** Ready for Phase J (Arcade Polish & Tournament/Ghost Placeholders).

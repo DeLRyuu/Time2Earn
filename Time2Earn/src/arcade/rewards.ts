@@ -324,12 +324,39 @@ export const GAME_REWARD_RULES: Record<ArcadeGameId, GameRewardRuleFn> = {
     };
   },
   'ball-bounce': (result) => {
-    // Placeholder physics score tiers
-    const rawTokens = result.score >= 300 ? 3 : result.score >= 100 ? 2 : result.score >= 30 ? 1 : 0;
+    // Phase I: Ball Bounce reward rule
+    // Rewards (cap 6/day):
+    // score 100=1, 300=2, 600=3, plus tokenPickups (max +3).
+    // Reject implausible score per second (> 80 pts/sec).
+    const durationMs = result.performance.durationMs ?? result.durationMs;
+    const durationSec = Math.max(1, durationMs / 1000);
+    const score = result.performance.score ?? result.score;
+
+    if (score / durationSec > 80) {
+      throw new Error(`Implausible score rate in Ball Bounce: ${Math.round(score / durationSec)} pts/sec`);
+    }
+
+    let scoreTokens = 0;
+    let tierLabel = 'Rookie Bouncer';
+
+    if (score >= 600) {
+      scoreTokens = 3;
+      tierLabel = 'Bounce Champion';
+    } else if (score >= 300) {
+      scoreTokens = 2;
+      tierLabel = 'Hoop Star';
+    } else if (score >= 100) {
+      scoreTokens = 1;
+      tierLabel = 'Gravity Hopper';
+    }
+
+    const tokenPickups = Math.min(3, Math.max(0, result.performance.tokenPickups ?? 0));
+    const rawTokens = scoreTokens > 0 || tokenPickups > 0 ? scoreTokens + tokenPickups : 0;
+
     return {
-      rawTokens,
+      rawTokens: Math.min(6, rawTokens),
       exp: 1 + rawTokens * 2,
-      tierLabel: rawTokens >= 3 ? 'Bounce Champion' : 'Hoop Star',
+      tierLabel,
     };
   },
 };
