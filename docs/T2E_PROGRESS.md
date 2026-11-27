@@ -257,3 +257,15 @@
   - `Time2Earn/src/pages/player/Arcade.css`: Cleaned old quiz CSS while preserving Profile progress bar classes.
   - `docs/reports/phase-17b.md`: Phase 17b audit report.
 - **Open Issues / Notes:** Local storage key `t2e_local_arcade_sessions` can be manually cleared by testers.
+
+## Phase 18: Arcade Foundation Scaffolding (Phase A1)
+- **Status:** Completed
+- **What Exists:** Created arcade type system (`src/arcade/types.ts`), 8-game registry with per-game caps and shared 50-token cap (`src/arcade/registry.ts`), `useGameLoop` animation hook, `useInput` keyboard/touch hook, Mulberry32 deterministic PRNG (`seededRng.ts`), and registry test suite (`src/arcade/registry.test.ts`).
+- **Key Files:**
+  - `Time2Earn/src/arcade/types.ts`: Core arcade interfaces (`ArcadeGameDef`, `GameResult`, `RewardResult`).
+  - `Time2Earn/src/arcade/registry.ts`: Registry for 8 games and `SHARED_DAILY_TOKEN_CAP`.
+  - `Time2Earn/src/arcade/engine/useGameLoop.ts`: RAF loop hook with dt clamping.
+  - `Time2Earn/src/arcade/engine/useInput.ts`: Keyboard, pointer, and swipe input tracker.
+  - `Time2Earn/src/arcade/engine/seededRng.ts`: Mulberry32 seeded RNG.
+  - `docs/reports/phase-18.md`: Phase 18 report.
+- **Open Issues / Notes:** Ready for Phase A2 (shared reward engine and rate limits).
