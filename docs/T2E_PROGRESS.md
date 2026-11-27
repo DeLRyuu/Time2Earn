@@ -248,3 +248,12 @@
   - `docs/reports/phase-20-live-e2e.md`: Live E2E test report and checklist.
   - `docs/T2E_FIRESTORE_RUNBOOK.md`: Complete operations and disaster recovery runbook.
 - **Open Issues / Notes:** All phases complete. Ready for final review.
+
+## Phase 17b: Legacy Arcade Removal & Clean Slate
+- **Status:** Completed
+- **What Exists:** Removed legacy Quick Quiz files and types, reset Arcade Zone to an empty placeholder, updated Home badge and manifest shortcut, and prepared codebase for the 8-game arcade rebuild.
+- **Key Files:**
+  - `Time2Earn/src/pages/player/Arcade.tsx`: Rebuilt empty-state placeholder cabinet.
+  - `Time2Earn/src/pages/player/Arcade.css`: Cleaned old quiz CSS while preserving Profile progress bar classes.
+  - `docs/reports/phase-17b.md`: Phase 17b audit report.
+- **Open Issues / Notes:** Local storage key `t2e_local_arcade_sessions` can be manually cleared by testers.

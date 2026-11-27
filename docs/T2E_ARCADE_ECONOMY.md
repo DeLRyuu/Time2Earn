@@ -1,5 +1,8 @@
 # Time2Earn — Arcade Economy & Game Specification (Phase 14)
 
+> [!NOTE]
+> The legacy Quick Quiz (daily cap 10, 3 attempts/day) was removed in Phase 0 (Phase 17b) and the economy is being redesigned for the 8-game arcade.
+
 ## Game Choice: Quick Quiz ("Cyber Trivia")
 **Rationale:** Quick Quiz is significantly more reliable and cheaper to build well than a reflex game. It provides deterministic, 100% server-authoritative scoring without timing jitter, lag spikes, or client-side timestamp manipulation. It fits the cyber gaming shop atmosphere (gaming trivia, esports history, hardware, and shop rules).
 

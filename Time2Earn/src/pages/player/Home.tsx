@@ -367,7 +367,7 @@ export const Home: React.FC = () => {
         <Link to="/player/arcade" className="tile a" aria-label="Go to Arcade Zone">
           <ArcadeIcon name="joy" className="bg" />
           <span className="badge" style={{ background: 'var(--on)', color: 'var(--y)' }}>
-            1 game open
+            Coming soon
           </span>
           <h2>Arcade Zone</h2>
           <p>Jump in, score big, earn EXP.</p>
