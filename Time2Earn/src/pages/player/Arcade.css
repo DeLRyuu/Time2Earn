@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Arcade Zone Styles (Chunky Arcade Cabinet)
+   Arcade Zone Styles (Chunky Arcade Cabinet & Lobby Hub)
    ========================================================================== */
 
 .arcade-view {
@@ -54,6 +54,194 @@
   background: repeating-linear-gradient(90deg, var(--g) 0 10px, transparent 10px 13px);
 }
 
+/* Arcade Profile Overview Panel */
+.arcade-profile-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 20px 24px;
+}
+
+.arcade-profile-stat {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.arcade-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--panel2);
+  display: grid;
+  place-items: center;
+  color: var(--y);
+  flex-shrink: 0;
+}
+
+.arcade-stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arcade-stat-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.arcade-stat-val {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 22px;
+  color: var(--ink);
+  line-height: 1;
+}
+
+/* Games Grid */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.game-card {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  transition: transform 0.15s ease;
+}
+
+.game-card.playable {
+  border-color: var(--y);
+  box-shadow: 0 6px 0 var(--line), 0 0 0 2px var(--y);
+}
+
+.game-card.playable:hover {
+  transform: translateY(-4px);
+}
+
+.game-scr {
+  height: 120px;
+  border-radius: 14px;
+  border: 3px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: var(--on);
+  position: relative;
+  overflow: hidden;
+}
+
+.game-scr svg {
+  width: 54px;
+  height: 54px;
+  position: relative;
+  z-index: 2;
+}
+
+.game-scr-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--panel);
+  color: var(--mute);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+  z-index: 3;
+}
+
+.game-card.playable .game-scr-badge {
+  background: var(--on);
+  color: var(--y);
+}
+
+.game-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.game-info h3 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 22px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.game-tagline {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mute);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.game-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--panel2);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.game-btn {
+  background: var(--y);
+  color: var(--on);
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 18px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 4px 0 var(--line);
+  padding: 12px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  width: 100%;
+}
+
+.game-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.game-btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.game-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 0 var(--line);
+  background: var(--panel2);
+  color: var(--mute);
+}
+
 /* Minimal Arcade Empty State */
 .arcade-empty {
   background: var(--panel);
@@ -91,4 +279,17 @@
   max-width: 440px;
   margin: 0;
   line-height: 1.4;
+}
+
+.arcade-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mute);
+  background: rgba(20, 23, 58, 0.3);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
 }

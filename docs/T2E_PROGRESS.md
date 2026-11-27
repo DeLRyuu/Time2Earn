@@ -281,3 +281,15 @@
   - `docs/T2E_ARCADE_ECONOMY.md`: Documented shared 50 cap and per-game cap table.
   - `docs/reports/phase-19.md`: Phase 19 report.
 - **Open Issues / Notes:** Ready for Phase A3 (Arcade hub UI, game shell, modal, and leaderboards).
+
+## Phase 20: Registry-Driven Arcade Hub (Phase A3)
+- **Status:** Completed
+- **What Exists:** Built the registry-driven arcade lobby hub in `Arcade.tsx` with locked cabinets for all 8 games, `GameShell` with dual-cap tracking and error boundary, `ArcadeResultModal`, per-game score leaderboards (`src/arcade/leaderboard.ts`), arcade achievements engine (`src/arcade/achievements.ts`), and player arcade profile stats panel.
+- **Key Files:**
+  - `Time2Earn/src/pages/player/Arcade.tsx` & `Arcade.css`: Rebuilt hub lobby and arcade profile overview.
+  - `Time2Earn/src/arcade/components/GameShell.tsx` & `GameShell.css`: Cabinet launcher shell with error boundary and caps bar.
+  - `Time2Earn/src/arcade/components/ArcadeResultModal.tsx`: Post-game score and reward modal.
+  - `Time2Earn/src/arcade/leaderboard.ts`: Score-only leaderboard engine.
+  - `Time2Earn/src/arcade/achievements.ts`: Achievement definitions and evaluation.
+  - `docs/reports/phase-20.md`: Phase 20 report.
+- **Open Issues / Notes:** Ready for Phase B (Reaction Rush first playable cabinet).

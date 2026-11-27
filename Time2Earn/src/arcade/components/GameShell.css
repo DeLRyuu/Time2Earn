@@ -1,0 +1,107 @@
+.game-shell-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.game-shell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 16px 20px;
+}
+
+.game-shell-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.game-shell-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.game-shell-title h2 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 24px;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1;
+}
+
+.game-shell-tagline {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mute);
+  margin: 0;
+}
+
+.game-shell-caps {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.game-shell-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 130px;
+}
+
+.game-shell-stat-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.game-shell-stat-val {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.game-shell-body {
+  position: relative;
+  width: 100%;
+}
+
+.game-shell-error {
+  background: var(--panel);
+  border: 3px solid var(--r);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--line);
+  padding: 32px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.game-shell-error h3 {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 24px;
+  color: var(--r);
+  margin: 0;
+}
+
+.game-shell-error p {
+  color: var(--mute);
+  font-size: 15px;
+  font-weight: 600;
+  max-width: 440px;
+  margin: 0;
+}
