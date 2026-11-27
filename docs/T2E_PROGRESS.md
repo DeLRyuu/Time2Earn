@@ -360,3 +360,15 @@
   - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled Time2Rush cabinet in registry and lobby mount switch.
   - `Time2Earn/docs/reports/phase-26.md`: Phase 26 report.
 - **Open Issues / Notes:** Ready for Phase G (Endless Run cabinet).
+
+## Phase 27: Endless Run Cabinet (Phase G)
+- **Status:** Completed
+- **What Exists:** Distance-based survival arcade game cabinet (`EndlessRun.tsx`) atop the runner engine. Features 6 escalating difficulty bands (0m Easy to 5000m+ Insane), consecutive pickup score combo multiplier (x1..x5), authoritative distance rewards (300m=1 to 6000m=6 tokens, cap 8/day) with max speed anti-cheat rejection, updated result modal token cap guidance, unit test suite (`logic.test.ts`), and set to `'playable'` in `registry.ts`.
+- **Key Files:**
+  - `Time2Earn/src/arcade/games/endless-run/EndlessRun.tsx` & `.css`: Endless Run game cabinet UI, HUD, and combo display.
+  - `Time2Earn/src/arcade/games/endless-run/logic.ts` & `logic.test.ts`: Difficulty bands, combo scaling, and unit test suite.
+  - `Time2Earn/src/arcade/rewards.ts`: Authoritative Endless Run distance reward tiers and anti-cheat limit.
+  - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and lobby mount switch.
+  - `Time2Earn/src/arcade/components/ArcadeResultModal.tsx`: Explicit daily cap messaging for leaderboard/score play.
+  - `Time2Earn/docs/reports/phase-27.md`: Phase 27 report.
+- **Open Issues / Notes:** Ready for Phase H (Zombie Run cabinet).

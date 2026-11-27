@@ -86,7 +86,7 @@ export const ArcadeResultModal: React.FC<ArcadeResultModalProps> = ({
                 padding: '10px 14px',
               }}
             >
-              <strong>Daily token cap reached.</strong> Score and EXP still count toward your profile and leaderboard ranking!
+              <strong>Daily token cap reached.</strong> You can keep playing for score and leaderboard ranking! Score and EXP still count toward your profile.
             </div>
           )}
         </div>

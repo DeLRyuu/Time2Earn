@@ -13,6 +13,8 @@ export interface RunnerCanvasProps {
   initialLives?: number;
   maxDistance?: number; // Optional track length (e.g. 1000m for Time2Rush). Completes at this mark.
   shortcutMode?: boolean; // When true, shortcut lane (lane 2) spawns high-value diamonds/crystals with harder obstacles
+  difficultyCurve?: (distance: number) => { speedMultiplier: number; densityMultiplier: number };
+  onPickupCollected?: (pickup: PickupItem) => void;
   paused?: boolean;
   onGameOver?: (state: RunnerState, inputLog: RecordedInput[], completed: boolean) => void;
   onProgress?: (distance: number, score: number, speed: number) => void;
@@ -24,6 +26,8 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
   initialLives = 3,
   maxDistance,
   shortcutMode = false,
+  difficultyCurve,
+  onPickupCollected,
   paused = false,
   onGameOver,
   onProgress,
@@ -336,7 +340,8 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
           const spawnLimit = maxDistance ?? Infinity;
           if (nextSpawnZRef.current - stateRef.current.distance < 120 && nextSpawnZRef.current < spawnLimit) {
             const z = nextSpawnZRef.current;
-            const pattern = generateObstaclePattern(z, rngRef.current, shortcutMode ? 1.4 : 1.0);
+            const diff = difficultyCurve ? difficultyCurve(z) : { speedMultiplier: 1, densityMultiplier: shortcutMode ? 1.4 : 1.0 };
+            const pattern = generateObstaclePattern(z, rngRef.current, diff.densityMultiplier);
             obstaclesRef.current.push(...pattern.obstacles);
 
             if (shortcutMode && pattern.passableLanes.includes(2)) {
@@ -357,12 +362,23 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
           }
 
           // Step main runner
+          const prevPickupsCount = stateRef.current.pickupsCollected;
           const { nextState, remainingObstacles, remainingPickups } = stepRunner(
             stateRef.current,
             actionsToRun,
             obstaclesRef.current,
             pickupsRef.current
           );
+
+          // If difficultyCurve specifies speed multiplier, adjust current speed smoothly
+          if (difficultyCurve && !nextState.isGameOver) {
+            const curve = difficultyCurve(nextState.distance);
+            nextState.speed = Math.min(RUNNER_CONFIG.MAX_SPEED, RUNNER_CONFIG.BASE_SPEED * curve.speedMultiplier);
+          }
+
+          if (onPickupCollected && nextState.pickupsCollected > prevPickupsCount) {
+            onPickupCollected({ id: 'collected', type: 'token', lane: nextState.lane, z: nextState.distance, scoreValue: 1, isPowerUp: false });
+          }
 
           // Check track completion
           let completed = false;

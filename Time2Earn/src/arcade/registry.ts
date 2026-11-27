@@ -23,7 +23,7 @@ export const ARCADE_GAMES: ArcadeGameDef[] = [
     tagline: 'Distance survival through escalating neon hazards',
     icon: 'bolt',
     color: 'var(--s)',
-    status: 'coming-soon',
+    status: 'playable',
     modes: ['classic'],
     minDurationMs: 5000,
     maxDurationMs: 600000,

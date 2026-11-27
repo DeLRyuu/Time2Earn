@@ -78,13 +78,47 @@ export const GAME_REWARD_RULES: Record<ArcadeGameId, GameRewardRuleFn> = {
     };
   },
   'endless-run': (result) => {
-    // Placeholder distance tiers
-    const dist = result.performance.distanceM ?? result.score;
-    const rawTokens = dist >= 2500 ? 4 : dist >= 1500 ? 3 : dist >= 800 ? 2 : dist >= 300 ? 1 : 0;
+    // Phase G: Endless Run reward rule
+    // Rewards (cap 8/day via registry):
+    // distance 300m=1, 800m=2, 1500m=3, 2500m=4, 4000m=5, 6000m=6 tokens.
+    // Reject distance that exceeds max speed * duration * 1.05.
+    // arcadeScore = distance + pickupsScore*5
+    const distanceM = result.performance.distanceM ?? result.score;
+    const durationMs = result.performance.durationMs ?? result.durationMs;
+    const durationSec = Math.max(0.5, durationMs / 1000);
+    const maxAllowedDist = 26.0 * durationSec * 1.05; // 26 m/s is MAX_SPEED
+
+    if (distanceM > maxAllowedDist + 10) {
+      throw new Error(`Implausible distance: ${distanceM}m in ${durationSec}s exceeds max speed limit`);
+    }
+
+    let rawTokens = 0;
+    let tierLabel = 'Rookie Runner';
+
+    if (distanceM >= 6000) {
+      rawTokens = 6;
+      tierLabel = 'Immortal Cyber Runner';
+    } else if (distanceM >= 4000) {
+      rawTokens = 5;
+      tierLabel = 'Neon Marathoner';
+    } else if (distanceM >= 2500) {
+      rawTokens = 4;
+      tierLabel = 'Endurance Master';
+    } else if (distanceM >= 1500) {
+      rawTokens = 3;
+      tierLabel = 'Highway Strider';
+    } else if (distanceM >= 800) {
+      rawTokens = 2;
+      tierLabel = 'Grid Survivor';
+    } else if (distanceM >= 300) {
+      rawTokens = 1;
+      tierLabel = 'Street Dasher';
+    }
+
     return {
       rawTokens,
       exp: 2 + rawTokens * 2,
-      tierLabel: rawTokens >= 3 ? 'Endurance Master' : rawTokens > 0 ? 'Survivor' : 'Rookie',
+      tierLabel,
     };
   },
   'zombie-run': (result) => {
