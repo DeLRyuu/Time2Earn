@@ -16,13 +16,58 @@ import { updateAdminConfig } from '../../services/configService';
 
 export const AdminSettings: React.FC = () => {
   const { config, loading, refreshConfig, updateConfig } = useConfig();
-  const { user } = useAuth();
+  const { user, updatePassword } = useAuth();
   const { showToast } = useToast();
 
   // Local draft state for editing
   const [draftConfig, setDraftConfig] = useState<AppConfig>(config);
   const [isDiffModalOpen, setIsDiffModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Admin Change Password State
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const handleAdminChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+
+    if (!newPassword || newPassword.length < 6) {
+      const err = 'New password must be at least 6 characters.';
+      setPasswordError(err);
+      showToast(err, 'error');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      const err = 'Passwords do not match.';
+      setPasswordError(err);
+      showToast(err, 'error');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const res = await updatePassword(newPassword);
+      if (res.success) {
+        showToast('Admin password updated successfully!', 'success');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        const err = res.error || 'Failed to update password.';
+        setPasswordError(err);
+        showToast(err, 'error');
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error updating password.';
+      setPasswordError(msg);
+      showToast(msg, 'error');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
 
   // Check if non-admin
   const isAdmin = user?.role === 'admin';
@@ -570,7 +615,105 @@ export const AdminSettings: React.FC = () => {
         </div>
       </Card>
 
-      {/* 6. Diff & Confirmation Modal */}
+      {/* 6. Admin Security & Change Password Card */}
+      <Card variant="default">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>ADMIN CREDENTIALS & SECURITY</h2>
+              <Badge variant="primary" size="sm">Staff Account</Badge>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Update your administrative password for user <strong>{user?.username}</strong>. Changes sync directly with Firebase Authentication.
+            </p>
+          </div>
+
+          {passwordError && (
+            <div
+              style={{
+                padding: '0.65rem 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                fontSize: '0.825rem',
+                color: 'var(--danger)',
+                fontWeight: 600,
+              }}
+            >
+              ⚠️ {passwordError}
+            </div>
+          )}
+
+          <form onSubmit={handleAdminChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '480px' }}>
+            <div>
+              <label
+                htmlFor="admin-new-password"
+                style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem' }}
+              >
+                NEW PASSWORD
+              </label>
+              <input
+                id="admin-new-password"
+                type="password"
+                placeholder="At least 6 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
+                style={{
+                  width: '100%',
+                  padding: '0.6rem 0.85rem',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface-sunken)',
+                  color: 'var(--text-main)',
+                  fontSize: '0.9rem',
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="admin-confirm-password"
+                style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem' }}
+              >
+                CONFIRM NEW PASSWORD
+              </label>
+              <input
+                id="admin-confirm-password"
+                type="password"
+                placeholder="Re-type new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                style={{
+                  width: '100%',
+                  padding: '0.6rem 0.85rem',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface-sunken)',
+                  color: 'var(--text-main)',
+                  fontSize: '0.9rem',
+                }}
+              />
+            </div>
+
+            <div>
+              <Button
+                variant="primary"
+                size="sm"
+                type="submit"
+                disabled={isUpdatingPassword}
+              >
+                {isUpdatingPassword ? 'Updating Password...' : 'Update Admin Password'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Card>
+
+      {/* 7. Diff & Confirmation Modal */}
       <Modal
         isOpen={isDiffModalOpen}
         onClose={() => setIsDiffModalOpen(false)}

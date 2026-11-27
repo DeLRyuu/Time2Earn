@@ -27,32 +27,6 @@ export interface LeaderboardCycleInfo {
   nextResetDate: Date;
 }
 
-// Verified top player baseline from legacy database (sorted by EXP desc)
-// Zero private data, only public gaming stats
-const BASELINE_LEADERBOARD: Array<Omit<LeaderboardEntry, 'rankPosition' | 'isCurrentUser'>> = [
-  { userId: 'sID4YpYaJcesS2cqqYNXwnKzHZ43', username: 'bano_123xx', rank: 'Gamer', exp: 1621 },
-  { userId: 'YPggiam7YeRSXqEzsu9Te5fcejo2', username: 'NINI123', rank: 'Gamer', exp: 1468 },
-  { userId: 'o4XjQ4Q6b7Wz6kH1bQJbE52B7G82', username: 'khalil', rank: 'Gamer', exp: 1462 },
-  { userId: '1DrJrVqcwfULvzDyyLV5S8b8ST03', username: 'lois_123xx', rank: 'Gamer', exp: 1251 },
-  { userId: 'lt49dZ1gZ6Ybk7lZ3ynwjaOsun53', username: 'john_123xx', rank: 'Grinder', exp: 893 },
-  { userId: '3KfpG3u9uXSNmuEfDI9bAndoqhb2', username: 'Daniel123', rank: 'Grinder', exp: 863 },
-  { userId: 'lld3stbFQ7Y6Dsw6knpYGTuogEr2', username: 'sherwin', rank: 'Grinder', exp: 641 },
-  { userId: 'r2uhFWm3ShNuQodTW6nU0kKLhVg1', username: 'trixie454510', rank: 'Grinder', exp: 634 },
-  { userId: 'U98j9jK991M1mK918jK991M1mK91', username: 'shanel', rank: 'Visitor', exp: 154 },
-  { userId: 'V87k8kL882N2nL827kL882N2nL82', username: 'wengweng', rank: 'Visitor', exp: 113 },
-  { userId: 'SPP7CNsr1SeKZHodgAMjV209aPA3', username: 'KACO123', rank: 'Visitor', exp: 111 },
-  { userId: 'W76l7lM773O3oM736lM773O3oM73', username: 'Lawrence^_^', rank: 'Newbie', exp: 66 },
-  { userId: 'X65m6mN664P4pN645mN664P4pN64', username: 'balong', rank: 'Newbie', exp: 61 },
-  { userId: 'Y54n5nO555Q5qO554nO555Q5qO55', username: 'kurt', rank: 'Newbie', exp: 28 },
-  { userId: 'Z43o4oP446R6rP443oP446R6rP44', username: 'brixen80', rank: 'Newbie', exp: 28 },
-  { userId: 'A32p3pQ337S7sQ332pQ337S7sQ33', username: 'shnael', rank: 'Newbie', exp: 20 },
-  { userId: 'B21q2qR228T8tR221qR228T8tR22', username: 'jamesrenoria123', rank: 'Newbie', exp: 7 },
-  { userId: 'C10r1rS119U9uS110rS119U9uS11', username: 'jamesrenoria', rank: 'Newbie', exp: 7 },
-  { userId: 'kBir0H3RdFMWzkqTJY77Lbe08Ul2', username: 'PLAY_CRED', rank: 'Newbie', exp: 7 },
-  { userId: 'D09s0sT000V0vT009sT000V0vT00', username: 'kevin_123', rank: 'Newbie', exp: 6 },
-  { userId: 'M6JcK40OKuYGxFVH5pJaXsKwjBE3', username: 'Phay', rank: 'Newbie', exp: 0 },
-];
-
 /**
  * Calculates the leaderboard reset window countdown
  * based on config.leaderboardResetDays and the config.updatedAt anchor.
@@ -149,9 +123,9 @@ export async function fetchPublicLeaderboard(
     }
   }
 
-  // Fallback to baseline if empty
+  // If empty, return empty array (no mock leaderboard)
   if (playerPool.length === 0) {
-    playerPool = [...BASELINE_LEADERBOARD];
+    playerPool = [];
   }
 
   // If current logged-in player is provided, ensure their latest score is included

@@ -32,7 +32,7 @@ type TabType = 'all' | 'sessions' | 'redemptions';
 const PAGE_SIZE = 8;
 
 export const Profile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updatePassword } = useAuth();
   const { config } = useConfig();
   const { showToast } = useToast();
   const { isInstallable, isInstalled, promptInstall } = usePwaInstall();
@@ -53,10 +53,57 @@ export const Profile: React.FC = () => {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [showAllLadder, setShowAllLadder] = useState(false);
 
+  // Change Password State
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+
   // Debt Payment Modal State
   const [isDebtModalOpen, setIsDebtModalOpen] = useState(false);
   const [creditsToUse, setCreditsToUse] = useState<number>(38);
   const [isSubmittingDebt, setIsSubmittingDebt] = useState(false);
+
+  const handlePlayerChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+
+    if (!newPassword || newPassword.length < 6) {
+      const err = 'New password must be at least 6 characters.';
+      setPasswordError(err);
+      showToast(err, 'error');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      const err = 'Passwords do not match.';
+      setPasswordError(err);
+      showToast(err, 'error');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const res = await updatePassword(newPassword);
+      if (res.success) {
+        showToast('Password changed successfully!', 'success');
+        setNewPassword('');
+        setConfirmPassword('');
+        setShowPasswordForm(false);
+      } else {
+        const err = res.error || 'Failed to update password.';
+        setPasswordError(err);
+        showToast(err, 'error');
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error updating password.';
+      setPasswordError(msg);
+      showToast(msg, 'error');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
 
   // Fallback demo user if not logged in
   const currentUser = useMemo(() => {
@@ -567,15 +614,105 @@ export const Profile: React.FC = () => {
 
       {/* 6. Security & Credentials Box */}
       <div className="profile-panel">
-        <div className="panel-header">
+        <div className="panel-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <ArcadeIcon name="shield" size={22} style={{ color: 'var(--v)' }} />
             <h2 className="panel-title">Security & credentials</h2>
           </div>
+          <button
+            type="button"
+            className="btn"
+            style={{
+              background: showPasswordForm ? 'var(--panel2)' : 'var(--v)',
+              color: 'var(--ink)',
+              padding: '8px 16px',
+              fontSize: '14px',
+            }}
+            onClick={() => {
+              setShowPasswordForm((prev) => !prev);
+              setPasswordError(null);
+            }}
+          >
+            {showPasswordForm ? 'Close form' : 'Change password'}
+          </button>
         </div>
-        <p style={{ margin: 0, fontSize: '15px', color: 'var(--mute)', lineHeight: 1.5 }}>
-          Time2Earn uses secure, staff-assisted credential recovery to safeguard your tokens and rank against unauthorized access. If you need to change your password or verify account credentials, please visit the shop counter and present your username to staff.
-        </p>
+
+        {passwordError && (
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: '12px',
+              background: 'rgba(255, 90, 95, 0.15)',
+              border: '2px solid var(--r)',
+              color: 'var(--r)',
+              fontWeight: 700,
+              fontSize: '14px',
+              marginBottom: '12px',
+            }}
+          >
+            ⚠️ {passwordError}
+          </div>
+        )}
+
+        {showPasswordForm ? (
+          <form onSubmit={handlePlayerChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '8px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--mute)', marginBottom: '6px' }}>
+                New password
+              </label>
+              <input
+                type="password"
+                required
+                minLength={6}
+                placeholder="At least 6 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="field"
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--mute)', marginBottom: '6px' }}>
+                Confirm new password
+              </label>
+              <input
+                type="password"
+                required
+                minLength={6}
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="field"
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="submit"
+                className="btn"
+                style={{ background: 'var(--g)', color: 'var(--on)' }}
+                disabled={isUpdatingPassword}
+              >
+                {isUpdatingPassword ? 'Saving password...' : 'Update password'}
+              </button>
+              <button
+                type="button"
+                className="btn"
+                style={{ background: 'var(--panel2)', color: 'var(--ink)' }}
+                onClick={() => {
+                  setShowPasswordForm(false);
+                  setPasswordError(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <p style={{ margin: 0, fontSize: '15px', color: 'var(--mute)', lineHeight: 1.5 }}>
+            You can change your password anytime directly from this console. For credential recovery or account verification, you may also visit the counter and present your username to shop staff.
+          </p>
+        )}
       </div>
 
       {/* 7. App Installation & QR */}

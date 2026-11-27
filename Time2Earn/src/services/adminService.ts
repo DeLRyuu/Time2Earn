@@ -121,8 +121,8 @@ function saveLocalRewards(rewards: RewardItem[]) {
 export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
   let pendingSessionsCount = 0;
   let pendingRedemptionsCount = 0;
-  let activePlayersCount = BACKUP_USERS.length;
-  let outstandingDebtsCount = 3; // From verified backup
+  let activePlayersCount = 0;
+  let outstandingDebtsCount = 0;
   const alerts: string[] = [];
   const recentActivities: AdminActivitySummary[] = [];
 

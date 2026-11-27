@@ -20,7 +20,6 @@ import {
   type QueryConstraint,
 } from 'firebase/firestore';
 import { db, hasValidFirebaseConfig } from '../lib/firebase';
-import sampleLogsData from './sampleLogs.json';
 
 export interface LogEntry {
   id: string;
@@ -353,13 +352,8 @@ export async function fetchAdminLogs(params: LogFilterParams): Promise<Paginated
     }
   }
 
-  // If Firestore returned no results or is in fallback mode, use representative backup sample
-  if (rawLogs.length === 0) {
-    rawLogs = (sampleLogsData as LogEntry[]).map((l) => ({
-      ...l,
-      amount: typeof l.amount === 'number' ? l.amount : 0,
-    }));
-  }
+  // If Firestore returned no results or is in fallback mode, return empty list
+  // (No mock fallback logs)
 
   // Apply in-memory filters for compound search (category, userQuery, date bounds)
   let filtered = rawLogs;
