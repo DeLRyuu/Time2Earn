@@ -21,6 +21,7 @@ import { recordScore } from '../../arcade/leaderboard';
 import { ReactionRush } from '../../arcade/games/reaction-rush/ReactionRush';
 import { KeyboardNinja } from '../../arcade/games/keyboard-ninja/KeyboardNinja';
 import { TargetHunter } from '../../arcade/games/target-hunter/TargetHunter';
+import { ColorClash } from '../../arcade/games/color-clash/ColorClash';
 import './Arcade.css';
 
 export const Arcade: React.FC = () => {
@@ -158,6 +159,8 @@ export const Arcade: React.FC = () => {
         return <KeyboardNinja onFinish={handleGameFinish} />;
       case 'target-hunter':
         return <TargetHunter onFinish={handleGameFinish} />;
+      case 'color-clash':
+        return <ColorClash onFinish={handleGameFinish} />;
       default:
         return (
           <div className="arcade-empty" style={{ margin: '20px 0' }}>

@@ -326,3 +326,14 @@
   - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and mount switch.
   - `docs/reports/phase-23.md`: Phase 23 report.
 - **Open Issues / Notes:** Ready for Phase E (Color Clash Stroop-style cabinet).
+
+## Phase 24: Color Clash Cabinet (Phase E)
+- **Status:** Completed
+- **What Exists:** Fourth playable arcade cabinet! Built 20-trial Stroop color-ink brain challenger (`ColorClash.tsx`), shape icons and keyboard shortcuts (1-4) for full accessibility, scaling speed timers per 5 correct, authoritative rewards with bot response rejection (`rewards.ts`), unit tests (`logic.test.ts`), and mounted into `Arcade.tsx` with `'playable'` status in `registry.ts`.
+- **Key Files:**
+  - `Time2Earn/src/arcade/games/color-clash/ColorClash.tsx` & `.css`: 20-question Stroop color game component.
+  - `Time2Earn/src/arcade/games/color-clash/logic.ts` & `logic.test.ts`: Question generator, accessibility shapes, timer scaling, and bot tests.
+  - `Time2Earn/src/arcade/rewards.ts`: Authoritative token tiers (Chromatic Master 4 down to 0) and reaction speed checks.
+  - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and mount switch.
+  - `docs/reports/phase-24.md`: Phase 24 report.
+- **Open Issues / Notes:** Ready for Phase F1 (Reusable 3-lane runner engine).

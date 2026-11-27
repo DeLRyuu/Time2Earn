@@ -95,13 +95,39 @@ export const GAME_REWARD_RULES: Record<ArcadeGameId, GameRewardRuleFn> = {
     };
   },
   'color-clash': (result) => {
-    // Placeholder Stroop accuracy tiers
-    const acc = result.performance.accuracy ?? (result.score > 0 ? 80 : 0);
-    const rawTokens = acc >= 90 ? 3 : acc >= 80 ? 2 : acc >= 65 ? 1 : 0;
+    // Rewards: accuracy>=95 && avgTimeMs<=1200 => 4 tokens; >=90 && <=1600 => 3; >=80 => 2; >=65 => 1; else 0. EXP = 2 + tokens*2.
+    // arcadeScore = correct*100 + bestCombo*40 - avgTimeMs/10. Reject avgTimeMs < 250.
+    const acc = result.performance.accuracy ?? 0;
+    const avgTimeMs = result.performance.avgTimeMs ?? 1500;
+
+    if (avgTimeMs < 250) {
+      throw new Error(`Inhuman response speed detected: ${avgTimeMs}ms average decision time (limit is 250ms)`);
+    }
+
+    let rawTokens: number;
+    let tierLabel: string;
+
+    if (acc >= 95 && avgTimeMs <= 1200) {
+      rawTokens = 4;
+      tierLabel = 'Chromatic Master';
+    } else if (acc >= 90 && avgTimeMs <= 1600) {
+      rawTokens = 3;
+      tierLabel = 'Color Wizard';
+    } else if (acc >= 80) {
+      rawTokens = 2;
+      tierLabel = 'Sharp Focus';
+    } else if (acc >= 65) {
+      rawTokens = 1;
+      tierLabel = 'Steady Eye';
+    } else {
+      rawTokens = 0;
+      tierLabel = 'Color Confused';
+    }
+
     return {
       rawTokens,
       exp: 2 + rawTokens * 2,
-      tierLabel: acc >= 90 ? 'Color Master' : 'Focus Kept',
+      tierLabel,
     };
   },
   'target-hunter': (result) => {

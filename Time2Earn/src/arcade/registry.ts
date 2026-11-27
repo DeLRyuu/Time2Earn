@@ -65,7 +65,7 @@ export const ARCADE_GAMES: ArcadeGameDef[] = [
     tagline: 'Stroop color-ink brain challenger under time pressure',
     icon: 'eye',
     color: 'var(--v)',
-    status: 'coming-soon',
+    status: 'playable',
     modes: ['classic'],
     minDurationMs: 8000,
     maxDurationMs: 120000,
