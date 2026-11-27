@@ -269,3 +269,15 @@
   - `Time2Earn/src/arcade/engine/seededRng.ts`: Mulberry32 seeded RNG.
   - `docs/reports/phase-18.md`: Phase 18 report.
 - **Open Issues / Notes:** Ready for Phase A2 (shared reward engine and rate limits).
+
+## Phase 19: Shared Reward Engine & Anti-Abuse (Phase A2)
+- **Status:** Completed
+- **What Exists:** Built pure reward engine (`src/arcade/rewards.ts`) enforcing dual-cap token clamping and uncapped EXP, `ARCADE_SUBMIT` rate limiter (6/min), `submitArcadeResult` endpoint with anti-replay and debt checks, local and callable submitter interfaces (`src/services/arcadeResultService.ts`), and reward unit tests (`src/arcade/rewards.test.ts`).
+- **Key Files:**
+  - `Time2Earn/src/arcade/rewards.ts`: Authoritative pure reward calculator and rules lookup.
+  - `Time2Earn/src/arcade/rewards.test.ts`: Reward clamping and validation test suite.
+  - `Time2Earn/src/services/arcadeResultService.ts`: Submission pipeline with rate limiting, anti-replay, audit logging, and swappable submitters.
+  - `Time2Earn/src/lib/rateLimit.ts`: Added `ARCADE_SUBMIT` policy.
+  - `docs/T2E_ARCADE_ECONOMY.md`: Documented shared 50 cap and per-game cap table.
+  - `docs/reports/phase-19.md`: Phase 19 report.
+- **Open Issues / Notes:** Ready for Phase A3 (Arcade hub UI, game shell, modal, and leaderboards).

@@ -3,6 +3,26 @@
 > [!NOTE]
 > The legacy Quick Quiz (daily cap 10, 3 attempts/day) was removed in Phase 0 (Phase 17b) and the economy is being redesigned for the 8-game arcade.
 
+## Shared Daily Token Economy & Caps (Phase A2)
+
+The 8-game arcade operates on a unified, shared daily economy designed to prevent inflation while encouraging gameplay variety across cabinets:
+
+| Parameter | Policy Value | Description |
+|---|---|---|
+| **Shared Daily Arcade Token Cap** | **50 tokens/day** | Hard ceiling across all arcade games combined per UTC day. |
+| **Time2Rush** | 15 tokens/day | Flagship 3-lane time-trial runner. |
+| **Endless Run** | 8 tokens/day | Distance survival runner with escalating hazards. |
+| **Zombie Run** | 10 tokens/day | Survival runner with stamina management and forks. |
+| **Reaction Rush** | 8 tokens/day | Precision reflex timing game. |
+| **Color Clash** | 8 tokens/day | Stroop color-word cognitive challenge. |
+| **Target Hunter** | 10 tokens/day | Precision canvas aim and target clicking. |
+| **Keyboard Ninja** | 10 tokens/day | Chunky arcade rhythm typing challenge. |
+| **Ball Bounce** | 6 tokens/day | Gravity physics hop through neon hoops. |
+| **Above Daily Cap** | Tokens capped at 0 | Scores and EXP remain **uncapped**; leaderboard rankings always record. |
+| **Max In-Game Drop** | 50 tokens | Maximum single in-game bonus payout. |
+
+---
+
 ## Game Choice: Quick Quiz ("Cyber Trivia")
 **Rationale:** Quick Quiz is significantly more reliable and cheaper to build well than a reflex game. It provides deterministic, 100% server-authoritative scoring without timing jitter, lag spikes, or client-side timestamp manipulation. It fits the cyber gaming shop atmosphere (gaming trivia, esports history, hardware, and shop rules).
 

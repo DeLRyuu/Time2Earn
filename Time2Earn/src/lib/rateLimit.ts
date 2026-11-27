@@ -26,6 +26,8 @@ export const RATE_LIMITS = {
   AUTH_LOGIN: { maxRequests: 5, windowMs: 60 * 1000 },
   // Max 5 staff password resets per minute per admin
   STAFF_RESET: { maxRequests: 5, windowMs: 60 * 1000 },
+  // Max 6 arcade session submissions per minute per player
+  ARCADE_SUBMIT: { maxRequests: 6, windowMs: 60 * 1000 },
 };
 
 /**
