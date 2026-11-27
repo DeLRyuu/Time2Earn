@@ -337,3 +337,15 @@
   - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and mount switch.
   - `docs/reports/phase-24.md`: Phase 24 report.
 - **Open Issues / Notes:** Ready for Phase F1 (Reusable 3-lane runner engine).
+
+## Phase 25: Reusable Runner Engine (Phase F1)
+- **Status:** Completed
+- **What Exists:** Deterministic 3-lane runner engine (`runnerCore.ts`) with 60Hz fixed timestep accumulator, actions (`jump`, `slide`, `laneLeft`, `laneRight`), procedural obstacle generator (`obstacles.ts`) with safe passage guarantees, pickups and power-ups (`pickups.ts`), canvas perspective renderer (`RunnerCanvas.tsx`) with keyboard/swipe controls and input logging, and full unit test suite (`runner.test.ts`).
+- **Key Files:**
+  - `Time2Earn/src/arcade/engine/runner/runnerCore.ts`: Deterministic runner simulation step, action handling, and collision resolution.
+  - `Time2Earn/src/arcade/engine/runner/obstacles.ts`: Obstacle specs (barricade, low-barrier, puddle, moving) and passable pattern generator.
+  - `Time2Earn/src/arcade/engine/runner/pickups.ts`: In-game pickup items (Token, Gem, Crystal, Diamond, Golden Token) and power-up specs.
+  - `Time2Earn/src/arcade/engine/runner/RunnerCanvas.tsx`: Canvas renderer, input recording, and perspective projection.
+  - `Time2Earn/src/arcade/engine/runner/runner.test.ts`: Determinism, passable pattern, and timer countdown tests.
+  - `Time2Earn/docs/reports/phase-25.md`: Phase 25 report.
+- **Open Issues / Notes:** Ready for Phase F2 (Time2Rush game cabinet wrapper).
