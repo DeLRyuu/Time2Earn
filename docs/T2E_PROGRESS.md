@@ -372,3 +372,14 @@
   - `Time2Earn/src/arcade/components/ArcadeResultModal.tsx`: Explicit daily cap messaging for leaderboard/score play.
   - `Time2Earn/docs/reports/phase-27.md`: Phase 27 report.
 - **Open Issues / Notes:** Ready for Phase H (Zombie Run cabinet).
+
+## Phase 28: Zombie Run Cabinet (Phase H)
+- **Status:** Completed
+- **What Exists:** Zombie survival arcade game cabinet (`ZombieRun.tsx`) built atop the runner engine. Features external chaser simulation (`chaser.ts`) tracking horde distance gap, stamina, sprint mechanics, shields, risk/reward forks (Safe Cache vs Survivor Crate), authoritative survival rewards (30s=1 to 120s=4 tokens + crate bonuses, cap 10/day), anti-cheat distance validation, unit test suite (`chaser.test.ts`), and set to `'playable'` in `registry.ts`.
+- **Key Files:**
+  - `Time2Earn/src/arcade/games/zombie-run/chaser.ts` & `chaser.test.ts`: Zombie gap tracking, stamina sprint, collision penalties, and unit tests.
+  - `Time2Earn/src/arcade/games/zombie-run/ZombieRun.tsx` & `.css`: Cabinet UI, stamina/gap gauge bars, sprint touch control, and survival HUD.
+  - `Time2Earn/src/arcade/rewards.ts`: Authoritative Zombie Run survival time and crate reward tiers.
+  - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and lobby mount switch.
+  - `Time2Earn/docs/reports/phase-28.md`: Phase 28 report.
+- **Open Issues / Notes:** Ready for Phase I (Ball Bounce physics cabinet).

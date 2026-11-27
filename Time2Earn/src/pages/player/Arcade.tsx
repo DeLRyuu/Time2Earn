@@ -24,6 +24,7 @@ import { TargetHunter } from '../../arcade/games/target-hunter/TargetHunter';
 import { ColorClash } from '../../arcade/games/color-clash/ColorClash';
 import { Time2Rush } from '../../arcade/games/time2rush/Time2Rush';
 import { EndlessRun } from '../../arcade/games/endless-run/EndlessRun';
+import { ZombieRun } from '../../arcade/games/zombie-run/ZombieRun';
 import './Arcade.css';
 
 export const Arcade: React.FC = () => {
@@ -167,6 +168,8 @@ export const Arcade: React.FC = () => {
         return <Time2Rush onComplete={handleGameFinish} />;
       case 'endless-run':
         return <EndlessRun onComplete={handleGameFinish} />;
+      case 'zombie-run':
+        return <ZombieRun onComplete={handleGameFinish} />;
       default:
         return (
           <div className="arcade-empty" style={{ margin: '20px 0' }}>

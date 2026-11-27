@@ -443,7 +443,7 @@ export const RunnerCanvas: React.FC<RunnerCanvasProps> = ({
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [paused, maxDistance, shortcutMode, ghostInputs, onGameOver, onProgress]);
+  }, [paused, maxDistance, shortcutMode, difficultyCurve, onPickupCollected, ghostInputs, onGameOver, onProgress]);
 
   return (
     <div

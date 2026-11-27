@@ -122,13 +122,45 @@ export const GAME_REWARD_RULES: Record<ArcadeGameId, GameRewardRuleFn> = {
     };
   },
   'zombie-run': (result) => {
-    // Placeholder survival time tiers
-    const sec = result.performance.survivedSec ?? Math.floor(result.durationMs / 1000);
-    const rawTokens = sec >= 120 ? 4 : sec >= 90 ? 3 : sec >= 60 ? 2 : sec >= 30 ? 1 : 0;
+    // Phase H: Zombie Run reward rule
+    // Rewards (cap 10/day):
+    // survivedSec 30=1, 60=2, 90=3, 120=4 tokens; crate opened +1 (max +2 per run).
+    // Validate distance vs time as in Endless Run (max speed 26 m/s * durationSec * 1.05).
+    const durationMs = result.performance.durationMs ?? result.durationMs;
+    const durationSec = Math.max(0.5, durationMs / 1000);
+    const distanceM = result.performance.distanceM ?? 0;
+    const maxAllowedDist = 26.0 * durationSec * 1.05;
+
+    if (distanceM > maxAllowedDist + 10) {
+      throw new Error(`Implausible distance in Zombie Run: ${distanceM}m in ${durationSec}s`);
+    }
+
+    const sec = result.performance.survivedSec ?? Math.floor(durationSec);
+    let timeTokens = 0;
+    let tierLabel = 'Fallen Survivor';
+
+    if (sec >= 120) {
+      timeTokens = 4;
+      tierLabel = 'Immortal Outrunner';
+    } else if (sec >= 90) {
+      timeTokens = 3;
+      tierLabel = 'Horde Evader';
+    } else if (sec >= 60) {
+      timeTokens = 2;
+      tierLabel = 'Sprint Survivor';
+    } else if (sec >= 30) {
+      timeTokens = 1;
+      tierLabel = 'Close Escape';
+    }
+
+    const cratesOpened = result.performance.cratesOpened ?? 0;
+    const crateBonus = Math.min(2, Math.max(0, cratesOpened)); // max +2 tokens for crates
+    const rawTokens = timeTokens > 0 ? timeTokens + crateBonus : 0;
+
     return {
-      rawTokens,
-      exp: 2 + rawTokens * 2,
-      tierLabel: rawTokens >= 3 ? 'Zombie Slayer' : rawTokens > 0 ? 'Escaped' : 'Bitten',
+      rawTokens: Math.min(10, rawTokens),
+      exp: 2 + rawTokens * 3,
+      tierLabel,
     };
   },
   'reaction-rush': (result) => {

@@ -37,7 +37,7 @@ export const ARCADE_GAMES: ArcadeGameDef[] = [
     tagline: 'Outrun the horde with stamina sprints and tactical forks',
     icon: 'flame',
     color: 'var(--r)',
-    status: 'coming-soon',
+    status: 'playable',
     modes: ['classic'],
     minDurationMs: 5000,
     maxDurationMs: 600000,
