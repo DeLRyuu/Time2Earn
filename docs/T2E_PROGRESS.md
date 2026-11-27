@@ -394,3 +394,11 @@
   - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and lobby mount switch.
   - `Time2Earn/docs/reports/phase-29.md`: Phase 29 report.
 - **Open Issues / Notes:** Ready for Phase J (Arcade Polish & Tournament/Ghost Placeholders).
+
+## Phase 30: Time2Rush Multiplayer Design (Phase J0)
+- **Status:** Completed
+- **What Exists:** Complete multiplayer architecture specification in `docs/TIME2RUSH_MULTIPLAYER.md` for 2–4 player synchronous races on identical seeded tracks. Compares Firestore listeners, Firebase Realtime Database (recommended MVP), and dedicated WebSockets across latency, cost, and anti-cheat; provides complete room data model, placement reward matrix (1st 10 to 4th 3 tokens), and Firestore security rules draft.
+- **Key Files:**
+  - `Time2Earn/docs/TIME2RUSH_MULTIPLAYER.md`: Architecture comparison, room schema, anti-cheat replay validation, and placement rewards.
+  - `Time2Earn/docs/reports/phase-30.md`: Phase 30 report.
+- **Open Issues / Notes:** Ready for Phase J1 (Multiplayer Room Lobby & Tournament implementation).
