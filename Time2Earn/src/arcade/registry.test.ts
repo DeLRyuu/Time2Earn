@@ -59,10 +59,14 @@ export function runRegistryTests(): void {
   assertEqual(getGameDef('keyboard-ninja')?.dailyTokenCap, 10, 'Keyboard Ninja cap 10');
   assertEqual(getGameDef('ball-bounce')?.dailyTokenCap, 6, 'Ball Bounce cap 6');
 
-  // 5. None playable yet (all coming-soon)
+  // 5. Initial game statuses: reaction-rush is playable, rest are coming-soon
   for (const game of ARCADE_GAMES) {
-    assertEqual(game.status, 'coming-soon', `Game ${game.id} should be coming-soon in Phase A1`);
+    if (game.id === 'reaction-rush') {
+      assertEqual(game.status, 'playable', 'Reaction Rush is playable in Phase B');
+    } else {
+      assertEqual(game.status, 'coming-soon', `Game ${game.id} should be coming-soon`);
+    }
   }
 
-  console.log('PASS: Arcade Registry Tests (8 games verified, unique IDs, caps > 0, all coming-soon)');
+  console.log('PASS: Arcade Registry Tests (8 games verified, unique IDs, caps > 0, Reaction Rush playable)');
 }

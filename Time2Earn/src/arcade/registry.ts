@@ -51,7 +51,7 @@ export const ARCADE_GAMES: ArcadeGameDef[] = [
     tagline: 'Test your reflexes with precision green-light timing',
     icon: 'clock',
     color: 'var(--g)',
-    status: 'coming-soon',
+    status: 'playable',
     modes: ['classic'],
     minDurationMs: 10000,
     maxDurationMs: 120000,

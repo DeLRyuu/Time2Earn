@@ -1,0 +1,148 @@
+.reaction-rush-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.reaction-hud {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 18px;
+}
+
+.reaction-hud-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reaction-hud-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reaction-hud-val {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 20px;
+  color: var(--ink);
+}
+
+/* Touch & Click Target Zone */
+.reaction-target-zone {
+  min-height: 320px;
+  border: 4px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 8px 0 var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reaction-target-zone:active {
+    transform: translateY(3px);
+    box-shadow: 0 5px 0 var(--line);
+  }
+}
+
+.reaction-target-zone.idle {
+  background: var(--panel);
+}
+
+.reaction-target-zone.waiting {
+  background: var(--r);
+  color: #ffffff;
+}
+
+.reaction-target-zone.ready {
+  background: var(--g);
+  color: var(--on);
+}
+
+.reaction-target-zone.round-complete {
+  background: var(--panel2);
+}
+
+.reaction-target-zone.early {
+  background: var(--y);
+  color: var(--on);
+}
+
+.reaction-state-text {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: clamp(36px, 8vw, 54px);
+  margin: 12px 0 6px 0;
+  line-height: 1;
+}
+
+.reaction-sub-text {
+  font-size: 16px;
+  font-weight: 700;
+  max-width: 440px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* Round History Chips */
+.reaction-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.reaction-history-title {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 16px;
+  color: var(--mute);
+  margin: 0;
+}
+
+.reaction-rounds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+}
+
+.reaction-round-chip {
+  background: var(--panel2);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  padding: 6px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.reaction-round-chip.best {
+  border-color: var(--g);
+  background: rgba(46, 213, 115, 0.15);
+}
+
+.reaction-round-chip.penalty {
+  border-color: var(--r);
+  background: rgba(255, 71, 87, 0.15);
+}

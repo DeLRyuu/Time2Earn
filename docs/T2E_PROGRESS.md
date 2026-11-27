@@ -293,3 +293,14 @@
   - `Time2Earn/src/arcade/achievements.ts`: Achievement definitions and evaluation.
   - `docs/reports/phase-20.md`: Phase 20 report.
 - **Open Issues / Notes:** Ready for Phase B (Reaction Rush first playable cabinet).
+
+## Phase 21: Reaction Rush Cabinet (Phase B)
+- **Status:** Completed
+- **What Exists:** First playable arcade cabinet! Built 10-round Reaction Rush reflex test (`ReactionRush.tsx`), pure grading and false-start penalty logic (`logic.ts`), authoritative rewards and human plausibility validation (`rewards.ts`), unit tests (`logic.test.ts`), and mounted into `Arcade.tsx` with `'playable'` status in `registry.ts`.
+- **Key Files:**
+  - `Time2Earn/src/arcade/games/reaction-rush/ReactionRush.tsx` & `.css`: 10-round interactive reflex test component.
+  - `Time2Earn/src/arcade/games/reaction-rush/logic.ts` & `logic.test.ts`: Pure grade boundaries and false-start calculation tests.
+  - `Time2Earn/src/arcade/rewards.ts`: Authoritative token tiers (S+ 5 down to D 0) and bot limits.
+  - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and mount switch.
+  - `docs/reports/phase-21.md`: Phase 21 report.
+- **Open Issues / Notes:** Ready for Phase C (Keyboard Ninja).

@@ -53,13 +53,45 @@ export const GAME_REWARD_RULES: Record<ArcadeGameId, GameRewardRuleFn> = {
     };
   },
   'reaction-rush': (result) => {
-    // Placeholder reflex timing tiers
+    // S+ 5, S 4, A 3, B 2, C 1, D 0 tokens; EXP = 1 + tokens*2
     const avgMs = result.performance.avgMs ?? 300;
-    const rawTokens = avgMs <= 180 ? 4 : avgMs <= 220 ? 3 : avgMs <= 270 ? 2 : avgMs <= 350 ? 1 : 0;
+    const minRoundMs = result.performance.minRoundMs ?? avgMs;
+
+    // Plausibility limits: reject human limit < 80ms or avgMs < 90ms
+    if (minRoundMs < 80) {
+      throw new Error(`Implausible reaction time detected: ${minRoundMs}ms (human limit is 80ms)`);
+    }
+    if (avgMs < 90) {
+      throw new Error(`Implausible average reaction time detected: ${avgMs}ms (bot limit is 90ms)`);
+    }
+
+    let rawTokens: number;
+    let tierLabel: string;
+
+    if (avgMs < 150) {
+      rawTokens = 5;
+      tierLabel = 'Grade S+ (Lightning)';
+    } else if (avgMs <= 180) {
+      rawTokens = 4;
+      tierLabel = 'Grade S (Supersonic)';
+    } else if (avgMs <= 220) {
+      rawTokens = 3;
+      tierLabel = 'Grade A (Sharp)';
+    } else if (avgMs <= 270) {
+      rawTokens = 2;
+      tierLabel = 'Grade B (Fast)';
+    } else if (avgMs <= 350) {
+      rawTokens = 1;
+      tierLabel = 'Grade C (Steady)';
+    } else {
+      rawTokens = 0;
+      tierLabel = 'Grade D (Slow)';
+    }
+
     return {
       rawTokens,
       exp: 1 + rawTokens * 2,
-      tierLabel: avgMs <= 180 ? 'Lightning Reflex' : avgMs <= 270 ? 'Sharp Reflex' : 'Normal',
+      tierLabel,
     };
   },
   'color-clash': (result) => {

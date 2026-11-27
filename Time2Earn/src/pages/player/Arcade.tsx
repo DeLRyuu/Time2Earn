@@ -18,6 +18,7 @@ import {
   type ArcadeStats,
 } from '../../arcade/achievements';
 import { recordScore } from '../../arcade/leaderboard';
+import { ReactionRush } from '../../arcade/games/reaction-rush/ReactionRush';
 import './Arcade.css';
 
 export const Arcade: React.FC = () => {
@@ -148,13 +149,9 @@ export const Arcade: React.FC = () => {
    * Future phases mount their components here with onFinish={handleGameFinish}.
    */
   const renderGameCabinet = (gameId: ArcadeGameId) => {
-    // Keep handleGameFinish referenced so TypeScript strict does not treat it as unused
-    void handleGameFinish;
-
     switch (gameId) {
-      // Future game phases will mount here:
-      // case 'reaction-rush': return <ReactionRush onFinish={handleGameFinish} />;
-      // case 'keyboard-ninja': return <KeyboardNinja onFinish={handleGameFinish} />;
+      case 'reaction-rush':
+        return <ReactionRush onFinish={handleGameFinish} />;
       default:
         return (
           <div className="arcade-empty" style={{ margin: '20px 0' }}>
