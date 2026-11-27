@@ -93,7 +93,7 @@ export const ARCADE_GAMES: ArcadeGameDef[] = [
     tagline: 'Chunky arcade rhythm typing with escalating stage pools',
     icon: 'pad',
     color: 'var(--s)',
-    status: 'coming-soon',
+    status: 'playable',
     modes: ['classic'],
     minDurationMs: 10000,
     maxDurationMs: 60000,

@@ -1,0 +1,155 @@
+.keyboard-ninja-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.ninja-hud {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 18px;
+}
+
+.ninja-hud-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ninja-hud-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ninja-hud-val {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 20px;
+  color: var(--ink);
+}
+
+.ninja-hud-val.combo {
+  color: var(--y);
+}
+
+.ninja-hud-val.lives {
+  color: var(--r);
+  display: flex;
+  gap: 4px;
+}
+
+/* Playfield */
+.ninja-playfield {
+  min-height: 320px;
+  background: var(--panel);
+  border: 4px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 8px 0 var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ninja-target-tile {
+  width: 120px;
+  height: 120px;
+  background: var(--s);
+  border: 4px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 8px 0 var(--line);
+  display: grid;
+  place-items: center;
+  margin: 16px 0;
+  transition: transform 0.05s ease;
+}
+
+.ninja-target-char {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 72px;
+  color: var(--on);
+  line-height: 1;
+}
+
+.ninja-multiplier-badge {
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 18px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  background: var(--y);
+  color: var(--on);
+  border: 2px solid var(--line);
+}
+
+/* Key hint row */
+.ninja-hint-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.ninja-hint-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ninja-key-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 500px;
+}
+
+.ninja-key-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--panel2);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  font-family: 'Lilita One', Impact, sans-serif;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.ninja-key-badge.active {
+  background: var(--s);
+  color: var(--on);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 0 var(--line);
+}
+
+/* Touch Warning */
+.ninja-touch-warning {
+  background: rgba(255, 71, 87, 0.1);
+  border: 2px solid var(--r);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--r);
+  font-weight: 700;
+  font-size: 14px;
+}

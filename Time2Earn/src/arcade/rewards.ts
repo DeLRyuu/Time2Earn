@@ -114,13 +114,43 @@ export const GAME_REWARD_RULES: Record<ArcadeGameId, GameRewardRuleFn> = {
     };
   },
   'keyboard-ninja': (result) => {
-    // Placeholder typing accuracy / kps tiers
-    const acc = result.performance.accuracy ?? 85;
-    const rawTokens = acc >= 93 ? 4 : acc >= 85 ? 2 : acc >= 70 ? 1 : 0;
+    // Rewards: accuracy>=97 && kps>=4 => 6 tokens; >=93 && >=3 => 4; >=85 && >=2 => 2; >=70 => 1; else 0. EXP = 2 + tokens*2.
+    // Reject keysPerSec > 14 (bot suspicion) and hits > 600.
+    const hits = result.performance.hits ?? 0;
+    const kps = result.performance.keysPerSec ?? 0;
+    const acc = result.performance.accuracy ?? 0;
+
+    if (kps > 14) {
+      throw new Error(`Suspicious typing speed detected: ${kps} keys/sec (bot limit is 14 kps)`);
+    }
+    if (hits > 600) {
+      throw new Error(`Suspicious hit count detected: ${hits} hits in single session (limit is 600)`);
+    }
+
+    let rawTokens: number;
+    let tierLabel: string;
+
+    if (acc >= 97 && kps >= 4) {
+      rawTokens = 6;
+      tierLabel = 'Grandmaster Ninja';
+    } else if (acc >= 93 && kps >= 3) {
+      rawTokens = 4;
+      tierLabel = 'Master Ninja';
+    } else if (acc >= 85 && kps >= 2) {
+      rawTokens = 2;
+      tierLabel = 'Adept Ninja';
+    } else if (acc >= 70) {
+      rawTokens = 1;
+      tierLabel = 'Apprentice Ninja';
+    } else {
+      rawTokens = 0;
+      tierLabel = 'Novice';
+    }
+
     return {
       rawTokens,
       exp: 2 + rawTokens * 2,
-      tierLabel: acc >= 93 ? 'Ninja Master' : 'Typist',
+      tierLabel,
     };
   },
   'ball-bounce': (result) => {

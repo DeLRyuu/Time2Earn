@@ -304,3 +304,14 @@
   - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and mount switch.
   - `docs/reports/phase-21.md`: Phase 21 report.
 - **Open Issues / Notes:** Ready for Phase C (Keyboard Ninja).
+
+## Phase 22: Keyboard Ninja Cabinet (Phase C)
+- **Status:** Completed
+- **What Exists:** Second playable arcade cabinet! Built 45-second rhythm typing challenge (`KeyboardNinja.tsx`), staged key pools and combo multiplier logic (`logic.ts`), authoritative accuracy/speed rewards with bot rate rejection (`rewards.ts`), unit tests (`logic.test.ts`), and mounted into `Arcade.tsx` with `'playable'` status in `registry.ts`.
+- **Key Files:**
+  - `Time2Earn/src/arcade/games/keyboard-ninja/KeyboardNinja.tsx` & `.css`: 45-second rhythm typing game cabinet.
+  - `Time2Earn/src/arcade/games/keyboard-ninja/logic.ts` & `logic.test.ts`: Staged key pools, combo scaling, and bot rejection tests.
+  - `Time2Earn/src/arcade/rewards.ts`: Token tiers (Grandmaster 6 down to Novice 0) and anti-macro speed limits.
+  - `Time2Earn/src/arcade/registry.ts` & `src/pages/player/Arcade.tsx`: Enabled cabinet in registry and mount switch.
+  - `docs/reports/phase-22.md`: Phase 22 report.
+- **Open Issues / Notes:** Ready for Phase D (Target Hunter canvas aim cabinet).
