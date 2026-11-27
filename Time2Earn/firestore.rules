@@ -126,5 +126,24 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
+
+    // 14. Arcade Scores: Authenticated read; players create their own score record (number score); admin update/delete only
+    match /arcade_scores/{scoreId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.score is number;
+      allow update, delete: if isAdmin();
+    }
+
+    // 15. Arcade Profiles: Owner reads and writes non-sensitive stats only (no credits or exp manipulation); admin writes all
+    match /arcade_profiles/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update: if isAdmin() || (
+        isOwner(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['credits', 'exp'])
+      );
+      allow delete: if isAdmin();
+    }
   }
 }

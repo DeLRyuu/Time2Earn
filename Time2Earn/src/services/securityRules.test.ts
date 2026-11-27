@@ -221,6 +221,38 @@ export function evaluateFirestoreRule(
       }
       return false;
 
+    case 'arcade_scores':
+      // Authenticated read; create only for own userId with score a number; update/delete admin only
+      if (operation === 'get' || operation === 'list') {
+        return isAuth;
+      }
+      if (operation === 'create') {
+        return isAuth && reqData.userId === authUid && typeof reqData.score === 'number';
+      }
+      if (operation === 'update' || operation === 'delete') {
+        return isAdmin;
+      }
+      return false;
+
+    case 'arcade_profiles':
+      // Readable by owner/admin; writable by owner for non-sensitive stats (no credits/exp)
+      if (operation === 'get' || operation === 'list') {
+        return (docId === authUid || resData.userId === authUid) || isAdmin;
+      }
+      if (operation === 'create' || operation === 'update') {
+        if (isAdmin) return true;
+        if (docId === authUid || resData.userId === authUid) {
+          const changedKeys = Object.keys(reqData).filter((k) => reqData[k] !== resData[k]);
+          const violates = changedKeys.some((k) => ['credits', 'exp'].includes(k));
+          return !violates;
+        }
+        return false;
+      }
+      if (operation === 'delete') {
+        return isAdmin;
+      }
+      return false;
+
     default:
       return false;
   }
@@ -878,6 +910,21 @@ export async function runSecurityTests(): Promise<boolean> {
   assertEqual('public_leaderboard: Unauthenticated read blocked', evaluateFirestoreRule('public_leaderboard', 'user_1', 'get', { auth: null }), false);
   assertTrue('public_leaderboard: Admin updates leaderboard', evaluateFirestoreRule('public_leaderboard', 'user_1', 'update', { auth: { uid: adminUser.uid, role: 'admin' } }));
   assertEqual('public_leaderboard: Player write blocked', evaluateFirestoreRule('public_leaderboard', 'user_1', 'update', { auth: { uid: playerUser.uid, role: 'user' } }), false);
+
+  // 14. arcade_scores
+  assertTrue('arcade_scores: Authenticated player reads scores', evaluateFirestoreRule('arcade_scores', 'score_1', 'get', { auth: { uid: playerUser.uid, role: 'user' } }));
+  assertTrue('arcade_scores: Player writes their own score record', evaluateFirestoreRule('arcade_scores', 'score_new', 'create', { auth: { uid: playerUser.uid, role: 'user' }, requestResource: { data: { userId: playerUser.uid, score: 550 } } }));
+  assertEqual('arcade_scores: Player cannot write another player score', evaluateFirestoreRule('arcade_scores', 'score_new', 'create', { auth: { uid: playerUser.uid, role: 'user' }, requestResource: { data: { userId: otherPlayerUser.uid, score: 550 } } }), false);
+  assertEqual('arcade_scores: Score must be a number', evaluateFirestoreRule('arcade_scores', 'score_new', 'create', { auth: { uid: playerUser.uid, role: 'user' }, requestResource: { data: { userId: playerUser.uid, score: 'nine_thousand' } } }), false);
+  assertEqual('arcade_scores: Player cannot update scores', evaluateFirestoreRule('arcade_scores', 'score_1', 'update', { auth: { uid: playerUser.uid, role: 'user' } }), false);
+  assertEqual('arcade_scores: Player cannot delete scores', evaluateFirestoreRule('arcade_scores', 'score_1', 'delete', { auth: { uid: playerUser.uid, role: 'user' } }), false);
+
+  // 15. arcade_profiles
+  assertTrue('arcade_profiles: Owner reads own profile', evaluateFirestoreRule('arcade_profiles', playerUser.uid, 'get', { auth: { uid: playerUser.uid, role: 'user' }, resource: { data: { userId: playerUser.uid } } }));
+  assertEqual('arcade_profiles: Player cannot read others profile', evaluateFirestoreRule('arcade_profiles', otherPlayerUser.uid, 'get', { auth: { uid: playerUser.uid, role: 'user' }, resource: { data: { userId: otherPlayerUser.uid } } }), false);
+  assertTrue('arcade_profiles: Owner updates non-sensitive stats', evaluateFirestoreRule('arcade_profiles', playerUser.uid, 'update', { auth: { uid: playerUser.uid, role: 'user' }, resource: { data: { userId: playerUser.uid, favoriteGame: 'reaction-rush' } }, requestResource: { data: { userId: playerUser.uid, favoriteGame: 'time2rush' } } }));
+  assertEqual('arcade_profiles: Player cannot change credits via arcade profile', evaluateFirestoreRule('arcade_profiles', playerUser.uid, 'update', { auth: { uid: playerUser.uid, role: 'user' }, resource: { data: { userId: playerUser.uid, credits: 10 } }, requestResource: { data: { userId: playerUser.uid, credits: 9999 } } }), false);
+  assertEqual('arcade_profiles: Player cannot change exp via arcade profile', evaluateFirestoreRule('arcade_profiles', playerUser.uid, 'update', { auth: { uid: playerUser.uid, role: 'user' }, resource: { data: { userId: playerUser.uid, exp: 10 } }, requestResource: { data: { userId: playerUser.uid, exp: 9999 } } }), false);
 
   // ==========================================================================
   // 10. AUTH EDGE CASES & USER ENUMERATION RESISTANCE

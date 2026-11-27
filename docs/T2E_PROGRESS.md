@@ -402,3 +402,14 @@
   - `Time2Earn/docs/TIME2RUSH_MULTIPLAYER.md`: Architecture comparison, room schema, anti-cheat replay validation, and placement rewards.
   - `Time2Earn/docs/reports/phase-30.md`: Phase 30 report.
 - **Open Issues / Notes:** Ready for Phase J1 (Multiplayer Room Lobby & Tournament implementation).
+
+## Phase 31: Arcade Hardening & System Verification (Phase K)
+- **Status:** Completed
+- **What Exists:** Production security rules and automated tests for `arcade_scores` and `arcade_profiles`, unified arcade test runner (`src/arcade/arcade.test.ts`) wired into `npm test` covering all 11 test suites and 8 cabinets, dynamic cap UI rendering, and README architecture documentation for zero-trust token disbursement.
+- **Key Files:**
+  - `Time2Earn/firestore.rules`: Security rules for `arcade_scores` and `arcade_profiles`.
+  - `Time2Earn/src/services/securityRules.test.ts`: Automated security test cases for arcade collections.
+  - `Time2Earn/src/arcade/arcade.test.ts` & `package.json`: Unified test suite runner hooked into `npm test`.
+  - `Time2Earn/README.md`: Architecture guide and game creation checklist.
+  - `Time2Earn/docs/reports/phase-31.md`: Phase 31 report.
+- **Open Issues / Notes:** Cyber Arcade 8-cabinet system is fully hardened, tested, and ready for deployment.
