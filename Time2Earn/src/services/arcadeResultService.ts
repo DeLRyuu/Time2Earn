@@ -6,7 +6,8 @@ import {
   addDoc,
   type DocumentData,
 } from 'firebase/firestore';
-import { db, hasValidFirebaseConfig } from '../lib/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions, hasValidFirebaseConfig } from '../lib/firebase';
 import type { AuthUser } from '../types/auth';
 import type { GameResult, RewardResult } from '../arcade/types';
 import { computeArcadeReward } from '../arcade/rewards';
@@ -197,25 +198,36 @@ export class LocalArcadeSubmitter implements ArcadeResultSubmitter {
 }
 
 /**
- * FirestoreArcadeSubmitter: Documented stub for production Cloud Function.
- * Note: Under current firestore.rules, client apps cannot write directly to
+ * FirestoreArcadeSubmitter: Production Firebase Callable Function submitter.
+ * Under current firestore.rules, client apps cannot write directly to
  * `users.credits`, `users.exp`, or `users.rank`. Authoritative reward writing
- * requires a Firebase Cloud Function callable (e.g. `submitArcadeResult`).
+ * executes via the Firebase Cloud Function callable `submitArcadeResult`.
  */
 export class FirestoreArcadeSubmitter implements ArcadeResultSubmitter {
   async submit(user: AuthUser, result: GameResult): Promise<ArcadeSubmissionOutcome> {
-    void user;
-    void result;
-    // Cloud Functions callable will be implemented in Phase L.
-    // Client write is prohibited by security rules: match /users/{userId} does not allow updating credits/exp/rank by owners.
-    throw new Error(
-      'FirestoreArcadeSubmitter: Production Firebase callable function `submitArcadeResult` is not yet configured. Under firestore.rules, clients cannot write credits directly. Please use LocalArcadeSubmitter for development/offline testing.'
+    if (!functions) {
+      throw new Error('FirestoreArcadeSubmitter: Firebase Functions client is not initialized.');
+    }
+
+    const callable = httpsCallable<{ userId: string; result: GameResult }, ArcadeSubmissionOutcome>(
+      functions,
+      'submitArcadeResult'
     );
+
+    const response = await callable({
+      userId: user.uid,
+      result,
+    });
+
+    return response.data;
   }
 }
 
-// Active submitter: defaults to LocalArcadeSubmitter for development/local execution
-let activeSubmitter: ArcadeResultSubmitter = new LocalArcadeSubmitter();
+// Active submitter: defaults to FirestoreArcadeSubmitter when valid Firebase config exists,
+// otherwise uses LocalArcadeSubmitter for development/local execution.
+let activeSubmitter: ArcadeResultSubmitter = hasValidFirebaseConfig
+  ? new FirestoreArcadeSubmitter()
+  : new LocalArcadeSubmitter();
 
 export function setArcadeSubmitter(submitter: ArcadeResultSubmitter): void {
   activeSubmitter = submitter;

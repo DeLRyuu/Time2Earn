@@ -413,3 +413,15 @@
   - `Time2Earn/README.md`: Architecture guide and game creation checklist.
   - `Time2Earn/docs/reports/phase-31.md`: Phase 31 report.
 - **Open Issues / Notes:** Cyber Arcade 8-cabinet system is fully hardened, tested, and ready for deployment.
+
+## Phase 32: Firebase Callable Function submitArcadeResult (Phase L)
+- **Status:** Completed
+- **What Exists:** Authoritative HTTPS callable Cloud Function `submitArcadeResult` implemented in `functions/src/index.ts` with TypeScript configuration and deployment instructions. Server re-evaluates rewards for all 8 cabinets, checks single-use session replay, rate limits submissions (6/min), clamps daily caps (50 shared + per-game), and executes an atomic Firestore transaction across `users`, `arcade_sessions`, `credit_transactions`, and `logs`. Client `FirestoreArcadeSubmitter` wired via `httpsCallable` with automatic offline/test fallback to `LocalArcadeSubmitter`.
+- **Key Files:**
+  - `Time2Earn/functions/package.json` & `functions/tsconfig.json`: Cloud functions project configuration.
+  - `Time2Earn/functions/src/index.ts`: Authoritative `submitArcadeResult` callable and transaction logic.
+  - `Time2Earn/functions/README.md`: Functions deployment guide and emulator testing instructions.
+  - `Time2Earn/src/lib/firebase.ts`: Firebase Functions client SDK instance export.
+  - `Time2Earn/src/services/arcadeResultService.ts`: `FirestoreArcadeSubmitter` implementation with `httpsCallable`.
+  - `docs/reports/phase-32.md`: Phase 32 report.
+- **Open Issues / Notes:** Phase L complete. All tests, build, and lint passing.
